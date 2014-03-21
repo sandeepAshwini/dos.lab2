@@ -29,7 +29,7 @@ public class TabletTester implements Runnable
 	private static int SLEEP_INTERVAL = 5000;
 	private static int MIN_REQUESTS = 5;
 	private static int RANGE = 10;
-	private boolean allowServerPush = true;
+	private boolean allowServerPush = false;
 	
 	/**
 	 * @param tabletInstance
