@@ -44,23 +44,22 @@ public class Orgetorix implements OrgetorixInterface {
 		this.tallyFileName = FILE_LOCATION + "Tallies" + this.dbName;
 		this.scoreFileName = FILE_LOCATION + "Scores" + this.dbName;
 		this.initializeDatabase();
-		
 	}
 
-	private void initializeDatabase(){
+	private void initializeDatabase() {
 		this.writeToDatabase(new HashSet<Event>(), this.resultFileName);
 		Map<NationCategories, Tally> medalTallies = new HashMap<NationCategories, Tally>();
-		for(NationCategories nation : NationCategories.values()) {
+		for (NationCategories nation : NationCategories.values()) {
 			medalTallies.put(nation, new Tally());
 		}
 		this.writeToDatabase(medalTallies, this.tallyFileName);
 		Map<EventCategories, ArrayList<Athlete>> scores = new HashMap<EventCategories, ArrayList<Athlete>>();
-		for(EventCategories event : EventCategories.values()) {
+		for (EventCategories event : EventCategories.values()) {
 			scores.put(event, new ArrayList<Athlete>());
 		}
 		this.writeToDatabase(scores, this.scoreFileName);
 	}
-	
+
 	@Override
 	public void updateResultsAndTallies(Event simulatedEvent)
 			throws RemoteException {
@@ -186,7 +185,8 @@ public class Orgetorix implements OrgetorixInterface {
 			regService.setupLocalRegistry();
 			registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
 			registry.rebind(SERVER_NAME, serverStub);
-			System.err.println("New Registry Service created. Orgetorix ready.");
+			System.err
+					.println("New Registry Service created. Orgetorix ready.");
 		}
 	}
 

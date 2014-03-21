@@ -181,9 +181,9 @@ public class Obelix implements ObelixInterface {
 	 */
 	public Tally getMedalTally(NationCategories teamName) {
 		System.err.println("Sending medal tally for " + teamName + ".");
-		try{
+		try {
 			return orgetorixStub.getMedalTally(teamName);
-		}catch(RemoteException r){
+		} catch (RemoteException r) {
 			return null;
 		}
 	}
