@@ -54,6 +54,7 @@ public class Results extends Printable implements Serializable {
 	 * Print methods and Printable Interface Implementation.
 	 */
 	public void printResults() {
+		System.out.println("Last updated: " + this.getTimestamp());
 		for(MedalCategories medal : winners.keySet()) {
 			System.out.println(medal.getCategory() + " : " + winners.get(medal).getCategory());
 		}
@@ -64,6 +65,7 @@ public class Results extends Printable implements Serializable {
 	}
 	
 	public void writeToFile(FileWriter writer) throws IOException {
+		writer.write("Last updated: " + this.getTimestamp() + "\n");
 		for(MedalCategories medal : winners.keySet()) {
 			writer.write(medal.getCategory() + " : " + winners.get(medal).getCategory() + "\n");
 		}

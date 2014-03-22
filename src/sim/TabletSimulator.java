@@ -24,10 +24,10 @@ public class TabletSimulator {
 	 * @return List<Tablet>
 	 * @throws OlympicException
 	 */
-	private static List<Tablet> createTablets(int numberOfTablets, String obelixHost) throws OlympicException {
+	private static List<Tablet> createTablets(int numberOfTablets, String serviceFinderHost) throws OlympicException {
 		List<Tablet> tablets = new ArrayList<Tablet>();
 		for(int i = 0; i < numberOfTablets; i++) {
-			tablets.add(Tablet.deployTablet(new String[]{obelixHost}));
+			tablets.add(Tablet.deployTablet(serviceFinderHost));
 		}
 		return tablets;
 	}
@@ -62,9 +62,9 @@ public class TabletSimulator {
 	 * @throws NotBoundException
 	 */
 	public static void main(String[] args) throws OlympicException, IOException, NotBoundException {
-		String obelixHost = (args.length < 1) ? null : args[0];
+		String serviceFinderHost = (args.length < 1) ? null : args[0];
 		int numTablets = (args.length < 2) ? DEFAULT_TABLET_LIMIT : Integer.parseInt(args[1]);
-		List<Tablet> tablets = createTablets(numTablets, obelixHost);
+		List<Tablet> tablets = createTablets(numTablets, serviceFinderHost);
 		try {
 			test(tablets);
 		} catch (InterruptedException e) {

@@ -18,6 +18,8 @@ import java.util.UUID;
 
 import server.ObelixInterface;
 import util.RegistryService;
+import util.ServerDetail;
+import util.ServiceComponent;
 import base.Athlete;
 import base.EventCategories;
 import base.NationCategories;
@@ -31,24 +33,36 @@ import base.Tally;
  *
  */
 
-public class Tablet implements TabletInterface {
+public class Tablet extends ServiceComponent implements TabletInterface {
 	//A local copy of the medal tallies.
 	private Map<NationCategories, Tally> medalTallies;
 	
 	//Writer used to write to files instead of the console.
     private FileWriter writer = null;
     
+    private int PID;
+    
     private static String JAVA_RMI_HOSTNAME_PROPERTY = "java.rmi.server.hostname";
     private static int JAVA_RMI_PORT = 1099;
+    private static String SERVICE_FINDER_HOST;
 
-	public Tablet() {
+	public Tablet(String serviceFinderHost) {
+		super(CLIENT_BASE_NAME + UUID.randomUUID().toString(), serviceFinderHost);
+		this.clientID = this.serviceName;
 		this.medalTallies = new HashMap<NationCategories, Tally>();
 	}
     
-    public Tablet(ObelixInterface obelixStub) {
+    public Tablet(ObelixInterface obelixStub, String serviceFinderHost) {
+    	super(CLIENT_BASE_NAME + UUID.randomUUID().toString(), serviceFinderHost);
+		this.clientID = this.serviceName;
     	this.medalTallies = new HashMap<NationCategories, Tally>();
     	this.obelixStub = obelixStub;
     }
+    
+    public void setObelixStub(ObelixInterface obelixStub) {
+    	this.obelixStub = obelixStub;
+    }
+    
     /**
      * Members specifying the server name(Obelix)
      * and the base client identifier.
@@ -78,7 +92,8 @@ public class Tablet implements TabletInterface {
      * @throws OlympicException 
      */
     public static void main(String[] args) throws OlympicException {
-    	Tablet tabletInstance = deployTablet(args);
+    	Tablet.SERVICE_FINDER_HOST = (args.length < 1) ? null : args[0];
+    	Tablet tabletInstance = deployTablet(Tablet.SERVICE_FINDER_HOST);
     	if(tabletInstance != null) {
     		tabletInstance.menuLoop();
     	} else {
@@ -92,14 +107,13 @@ public class Tablet implements TabletInterface {
      * @return Tablet
      * @throws OlympicException
      */
-    public static Tablet deployTablet(String[] args) throws OlympicException {
-    	String obelixHost = (args.length < 1) ? null : args[0];
-    	String tabletHost = (args.length < 2) ? null : args[1];
-    	Tablet tabletInstance = null;
+    public static Tablet deployTablet(String serviceFinderHost) throws OlympicException {
+    	Tablet tabletInstance = new Tablet(serviceFinderHost);
 		try {
+			ServerDetail obelixDetail = tabletInstance.getServerDetail(OBELIX_SERVER_NAME);
 			RegistryService regService = new RegistryService();
 			System.setProperty(JAVA_RMI_HOSTNAME_PROPERTY, regService.getLocalIPAddress());
-			tabletInstance = getTabletInstance(obelixHost, tabletHost, regService);
+			tabletInstance.setupTabletInstance(obelixDetail, regService);
 		} catch (IOException e) {
 			throw new OlympicException("Registry could not be created.", e);
 		}
@@ -142,11 +156,10 @@ public class Tablet implements TabletInterface {
      * @return Tablet
      * @throws IOException 
      */
-    private static Tablet getTabletInstance(String obelixHost, String tabletHost, RegistryService regService) throws IOException, OlympicException {
-    	ObelixInterface obelixStub = connectToObelix(obelixHost);
-    	Tablet tabletInstance = new Tablet(obelixStub);
-    	tabletInstance.setupTabletServer(tabletHost, regService);
-    	return tabletInstance;
+    private void setupTabletInstance(ServerDetail obelixDetail, RegistryService regService) throws IOException, OlympicException {
+    	ObelixInterface obelixStub = connectToObelix(obelixDetail);
+    	this.setObelixStub(obelixStub);
+    	this.setupTabletServer(regService);
     }
 
     /**
@@ -155,13 +168,13 @@ public class Tablet implements TabletInterface {
      * @param obelixHost
      * @return ObelixInterface
      */
-    private static ObelixInterface connectToObelix(String obelixHost) {
+    private static ObelixInterface connectToObelix(ServerDetail obelixDetail) {
 		Registry registry = null;
 		ObelixInterface obelixStub = null;
 		
 		try {
-			registry = LocateRegistry.getRegistry(obelixHost, JAVA_RMI_PORT);
-	        obelixStub = (ObelixInterface) registry.lookup(OBELIX_SERVER_NAME);
+			registry = LocateRegistry.getRegistry(obelixDetail.getServiceAddress(), JAVA_RMI_PORT);
+	        obelixStub = (ObelixInterface) registry.lookup(obelixDetail.getServerName());
 		} catch(RemoteException e) {
 			e.printStackTrace();
 		} catch (NotBoundException e) {
@@ -176,22 +189,21 @@ public class Tablet implements TabletInterface {
      * @param host
      * @throws IOException 
      */
-    private void setupTabletServer(String host, RegistryService regService) throws IOException, OlympicException {
+    private void setupTabletServer(RegistryService regService) throws IOException, OlympicException {
     	Registry registry = null;
-		this.clientID = CLIENT_BASE_NAME + UUID.randomUUID().toString();
 		TabletInterface tabletStub = (TabletInterface) UnicastRemoteObject.exportObject(this, 0);
-		
-        try {
-            registry = LocateRegistry.getRegistry(host, JAVA_RMI_PORT);
-            registry.rebind(clientID, tabletStub);
+		this.register(clientID, regService.getLocalIPAddress());
+		try {
+            registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
+            registry.rebind(this.getServerName(), tabletStub);
             System.err.println("Registry Service running at : " + regService.getLocalIPAddress());
             System.err.println("Tablet ready.");         
         } catch (RemoteException e) {
         	regService.setupLocalRegistry();
-            registry = LocateRegistry.getRegistry(host, JAVA_RMI_PORT);
-            registry.rebind(clientID, tabletStub);
+            registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
+            registry.rebind(this.getServerName(), tabletStub);
             System.err.println("New Registry Service created. Tablet ready");     
-        }    
+        }
     }
     
     /**

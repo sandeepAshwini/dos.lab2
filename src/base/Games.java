@@ -6,6 +6,8 @@ import java.rmi.registry.Registry;
 import java.util.ArrayList;
 
 import server.CacophonixInterface;
+import util.ServerDetail;
+import util.ServiceComponent;
 
 /**
  * Class encapsulates the entire Olympic Games.
@@ -13,7 +15,7 @@ import server.CacophonixInterface;
  *
  */
 
-public class Games {
+public class Games extends ServiceComponent {
 	
 	private static int JAVA_RMI_PORT = 1099;
 	
@@ -24,6 +26,11 @@ public class Games {
 	private String venue;
 	private String year;
 	private int currentEvent;
+	
+	private static String CACOPHONIX_SERVICE_NAME = "Cacophonix";
+	
+	public Games(){
+	}
 	
 	public Games(String venue, String year) {
 		this.events = new ArrayList<Event>();
@@ -88,15 +95,17 @@ public class Games {
 	public static void main(String[] args) throws OlympicException {
 		long TIME_DELAY = 20*1000;
 		long SLEEP_DURATION = (long) 5.1*1000;
+		
+		String serviceFinderHost = (args.length < 1) ? null : args[0];
 		Games game = new Games("Pompeii", "48 BC");
+		game.setServiceFinderHost(serviceFinderHost);
 		int numEvents = game.events.size();
-		String cacophonixHost = (args.length < 1) ? null : args[0];
-		String CACOPHONIX_SERVER_NAME = "Cacophonix";
 		
 		game.printGameIntro();
 		try {
-			Registry registry = LocateRegistry.getRegistry(cacophonixHost, JAVA_RMI_PORT);
-            CacophonixInterface stub = (CacophonixInterface) registry.lookup(CACOPHONIX_SERVER_NAME);
+			ServerDetail cacophonixDetail = game.getServerDetail(CACOPHONIX_SERVICE_NAME); 
+			Registry registry = LocateRegistry.getRegistry(cacophonixDetail.getServiceAddress(), JAVA_RMI_PORT);
+            CacophonixInterface stub = (CacophonixInterface) registry.lookup(cacophonixDetail.getServerName());
             for(int i = 0; i < numEvents; i++)
     		{
         		Event simulatedEvent = game.simulateNextEvent();

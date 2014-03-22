@@ -8,6 +8,8 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 
 import util.RegistryService;
+import util.ServerDetail;
+import util.ServiceComponent;
 import base.Athlete;
 import base.Event;
 import base.OlympicException;
@@ -19,28 +21,31 @@ import base.OlympicException;
  * @author sandeep
  *
  */
-public class Cacophonix implements CacophonixInterface {
+public class Cacophonix extends ServiceComponent implements CacophonixInterface {
 	
-	private static String obelixHostname;
-	private static String CACOPHONIX_SERVER_NAME = "Cacophonix";
+	private static String CACOPHONIX_SERVICE_NAME = "Cacophonix";
 	private static String OBELIX_SERVER_NAME = "Obelix";
 	private static String JAVA_RMI_HOSTNAME_PROPERTY = "java.rmi.server.hostname";
 	private static int JAVA_RMI_PORT = 1099;
+	private static String SERVICE_FINDER_HOST;
 	
 	//To prevent the server from being garbage collected.
 	private static Cacophonix cacophonixServerInstance;
 	
 	private ObelixInterface clientStub;
 	
-	public Cacophonix() {}
+	public Cacophonix(String serviceFinderHost) {
+		super(CACOPHONIX_SERVICE_NAME, serviceFinderHost);
+	}
 	
-	public Cacophonix(ObelixInterface clientStub) {
+	public Cacophonix(ObelixInterface clientStub, String serviceFinderHost) {
+		super(CACOPHONIX_SERVICE_NAME, serviceFinderHost);
 		this.clientStub = clientStub;
 	}
 	
 	private static Cacophonix getCacophonixInstance() {
 		if(Cacophonix.cacophonixServerInstance == null) {
-			Cacophonix.cacophonixServerInstance = new Cacophonix();
+			Cacophonix.cacophonixServerInstance = new Cacophonix(Cacophonix.SERVICE_FINDER_HOST);
 		}
 		return Cacophonix.cacophonixServerInstance;
 	}
@@ -76,7 +81,7 @@ public class Cacophonix implements CacophonixInterface {
 	 * @throws OlympicException 
 	 */
 	public static void main(String args[]) throws OlympicException {
-		obelixHostname = (args.length < 1) ? null : args[0];
+		Cacophonix.SERVICE_FINDER_HOST = (args.length < 1) ? null : args[0];
 		Cacophonix cacophonixInstance = Cacophonix.getCacophonixInstance();
 		cacophonixInstance.setupClientInstance();		
 		try {
@@ -97,16 +102,16 @@ public class Cacophonix implements CacophonixInterface {
 	private void setupServerInstance(RegistryService regService) throws IOException, OlympicException {
 		Registry registry = null;
     	CacophonixInterface serverStub = (CacophonixInterface) UnicastRemoteObject.exportObject(Cacophonix.getCacophonixInstance(), 0);
-    	
+    	this.register(CACOPHONIX_SERVICE_NAME, regService.getLocalIPAddress());
     	try {
         	registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
-            registry.rebind(CACOPHONIX_SERVER_NAME, serverStub);
+            registry.rebind(this.getServerName(), serverStub);
             System.err.println("Registry Service running at " + regService.getLocalIPAddress() + ".");
             System.err.println("Cacophonix ready.");
         } catch (RemoteException e) {
         	regService.setupLocalRegistry();
             registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
-            registry.rebind(CACOPHONIX_SERVER_NAME, serverStub);
+            registry.rebind(this.getServerName(), serverStub);
             System.err.println("New Registry Service created. Cacophonix ready.");
         }
    	}
@@ -120,8 +125,9 @@ public class Cacophonix implements CacophonixInterface {
 		Registry registry = null;
 		ObelixInterface clientStub = null;
 		try {
-			registry = LocateRegistry.getRegistry(obelixHostname, JAVA_RMI_PORT);
-	        clientStub = (ObelixInterface) registry.lookup(OBELIX_SERVER_NAME);
+			ServerDetail obelixDetail = this.getServerDetail(OBELIX_SERVER_NAME);
+			registry = LocateRegistry.getRegistry(obelixDetail.getServiceAddress(), JAVA_RMI_PORT);
+	        clientStub = (ObelixInterface) registry.lookup(obelixDetail.getServerName());
 	        Cacophonix.getCacophonixInstance().clientStub = clientStub;
 		} catch(RemoteException e) {
 			e.printStackTrace();

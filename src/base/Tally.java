@@ -34,6 +34,7 @@ public class Tally extends Printable implements Serializable {
 	 * Print methods and Printable interface implementation.
 	 */
 	public void printMedalTally() {
+		System.out.println("Last updated: " + this.getTimestamp());
 		for(MedalCategories medal:medalTally.keySet()) {
 			System.out.print(medal.getCategory() + " : " + medalTally.get(medal) + " ");
 		}
@@ -45,14 +46,10 @@ public class Tally extends Printable implements Serializable {
 	}
 	
 	public void writeToFile(FileWriter writer)throws IOException{
-		
+		writer.write("Last updated: " + this.getTimestamp() + "\n");
 		for(MedalCategories medal:medalTally.keySet()) {
 			writer.write(medal.getCategory() + " : " + medalTally.get(medal) + " ");
 		}
 		writer.write("\n");
-		
 	}
-	
-	
-	
 }

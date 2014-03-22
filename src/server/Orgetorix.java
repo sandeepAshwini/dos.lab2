@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import util.BullyElectedBerkeleySynchronized;
 import util.RegistryService;
 import base.Athlete;
 import base.Event;
@@ -24,13 +25,16 @@ import base.EventCategories;
 import base.MedalCategories;
 import base.NationCategories;
 import base.OlympicException;
+import base.Printable;
 import base.Results;
 import base.Tally;
 
-public class Orgetorix implements OrgetorixInterface {
+public class Orgetorix extends BullyElectedBerkeleySynchronized implements OrgetorixInterface {
 	private static String JAVA_RMI_HOSTNAME_PROPERTY = "java.rmi.server.hostname";
 	private static int JAVA_RMI_PORT = 1099;
-	public static String FILE_LOCATION = "./";
+	private static String FILE_LOCATION = "./";
+	private static String ORGETORIX_SERVICE_NAME = "Orgetorix";
+	private static String SERVICE_FINDER_HOST;
 
 	private static Orgetorix orgetorixServerInstance;
 	private String resultFileName;
@@ -38,24 +42,33 @@ public class Orgetorix implements OrgetorixInterface {
 	private String scoreFileName;
 	private String dbName;
 
-	public Orgetorix() {
+	public Orgetorix(String serviceFinderHost) {
+		super(ORGETORIX_SERVICE_NAME, serviceFinderHost);
 		this.dbName = UUID.randomUUID().toString();
 		this.resultFileName = FILE_LOCATION + "Results" + this.dbName;
 		this.tallyFileName = FILE_LOCATION + "Tallies" + this.dbName;
 		this.scoreFileName = FILE_LOCATION + "Scores" + this.dbName;
-		this.initializeDatabase();
+		try {
+			this.initializeDatabase();
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
 	}
 
-	private void initializeDatabase() {
+	private void initializeDatabase() throws RemoteException {
 		this.writeToDatabase(new HashSet<Event>(), this.resultFileName);
 		Map<NationCategories, Tally> medalTallies = new HashMap<NationCategories, Tally>();
 		for (NationCategories nation : NationCategories.values()) {
 			medalTallies.put(nation, new Tally());
+			medalTallies.get(nation).setTimestamp(this.getTime());
 		}
 		this.writeToDatabase(medalTallies, this.tallyFileName);
 		Map<EventCategories, ArrayList<Athlete>> scores = new HashMap<EventCategories, ArrayList<Athlete>>();
 		for (EventCategories event : EventCategories.values()) {
 			scores.put(event, new ArrayList<Athlete>());
+			for(Athlete athleteScore : scores.get(event)) {
+				athleteScore.setTimestamp(this.getTime());
+			}
 		}
 		this.writeToDatabase(scores, this.scoreFileName);
 	}
@@ -67,18 +80,28 @@ public class Orgetorix implements OrgetorixInterface {
 		updateMedalTallies(simulatedEvent.getResult());
 	}
 
-	private void updateResults(Event completedEvent) {
+	private void updateResults(Event completedEvent) throws RemoteException {
 		Set<Event> completedEvents = readResultFile();
 		completedEvents.add(completedEvent);
+		
+		for (Event event : completedEvents) {
+			event.getResult().setTimestamp(this.getTime());
+		}
+			
 		writeToDatabase(completedEvents, this.resultFileName);
 	}
 
-	private void updateMedalTallies(Results eventResult) {
+	private void updateMedalTallies(Results eventResult) throws RemoteException {
 		Map<NationCategories, Tally> medalTallies = readTallyFile();
 		for (MedalCategories medalType : MedalCategories.values()) {
 			medalTallies.get(eventResult.getTeam(medalType)).incrementTally(
 					medalType);
 		}
+		
+		for (NationCategories nation : medalTallies.keySet()) {
+			medalTallies.get(nation).setTimestamp(this.getTime());
+		}
+		
 		writeToDatabase(medalTallies, this.tallyFileName);
 	}
 
@@ -86,7 +109,11 @@ public class Orgetorix implements OrgetorixInterface {
 	public void updateCurrentScores(EventCategories eventType,
 			List<Athlete> currentScores) throws RemoteException {
 		Map<EventCategories, ArrayList<Athlete>> scores = readScoreFile();
+		for (Athlete athleteScore : currentScores) {
+			athleteScore.setTimestamp(this.getTime());
+		}
 		scores.put(eventType, (ArrayList<Athlete>) currentScores);
+		
 		writeToDatabase(scores, this.scoreFileName);
 	}
 
@@ -160,10 +187,10 @@ public class Orgetorix implements OrgetorixInterface {
 		}
 		return object;
 	}
-
+	
 	private static Orgetorix getOrgetorixInstance() {
 		if (Orgetorix.orgetorixServerInstance == null) {
-			Orgetorix.orgetorixServerInstance = new Orgetorix();
+			Orgetorix.orgetorixServerInstance = new Orgetorix(Orgetorix.SERVICE_FINDER_HOST);
 		}
 		return Orgetorix.orgetorixServerInstance;
 	}
@@ -171,20 +198,20 @@ public class Orgetorix implements OrgetorixInterface {
 	private void setupOrgetorixServer(RegistryService regService)
 			throws IOException, OlympicException {
 		Registry registry = null;
-		String SERVER_NAME = "Orgetorix";
-
+		
+		this.register(ORGETORIX_SERVICE_NAME, regService.getLocalIPAddress());
 		OrgetorixInterface serverStub = (OrgetorixInterface) UnicastRemoteObject
 				.exportObject(Orgetorix.getOrgetorixInstance(), 0);
 		try {
 			registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
-			registry.rebind(SERVER_NAME, serverStub);
+			registry.rebind(this.getServerName(), serverStub);
 			System.err.println("Registry Service running at "
 					+ regService.getLocalIPAddress() + ".");
 			System.err.println("Orgetorix ready.");
 		} catch (RemoteException e) {
 			regService.setupLocalRegistry();
 			registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
-			registry.rebind(SERVER_NAME, serverStub);
+			registry.rebind(this.getServerName(), serverStub);
 			System.err
 					.println("New Registry Service created. Orgetorix ready.");
 		}
@@ -192,6 +219,7 @@ public class Orgetorix implements OrgetorixInterface {
 
 	public static void main(String[] args) throws OlympicException {
 		// Bind the remote object's stub in the registry
+		Orgetorix.SERVICE_FINDER_HOST = (args.length < 1) ? null : args[0];
 		Orgetorix orgetorixInstance = Orgetorix.getOrgetorixInstance();
 
 		try {
@@ -199,6 +227,7 @@ public class Orgetorix implements OrgetorixInterface {
 			System.setProperty(JAVA_RMI_HOSTNAME_PROPERTY,
 					regService.getLocalIPAddress());
 			orgetorixInstance.setupOrgetorixServer(regService);
+			orgetorixInstance.initiateElection();
 		} catch (IOException e) {
 			throw new OlympicException(
 					"Registry Service could not be created.", e);

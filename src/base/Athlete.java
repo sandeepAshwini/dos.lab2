@@ -67,6 +67,7 @@ public class Athlete extends Printable implements Comparable<Athlete>, Serializa
 	 */
 	
 	public void printScore(){
+		System.out.println("Last updated: " + this.getTimestamp());
 		System.out.printf("Name : %s \t Nationality : %s \t Score : %d. \n", this.name, this.nationality.getCategory(), this.score);
 	}
 
@@ -80,6 +81,7 @@ public class Athlete extends Printable implements Comparable<Athlete>, Serializa
 	 * @param FileWriter
 	 */	
 	public void writeToFile(FileWriter writer) throws IOException {
+		writer.write("Last updated: " + this.getTimestamp() + "\n");
 		writer.write(String.format("Name : %s \t Nationality : %s \t Score : %d. \n", this.name, this.nationality.getCategory(), this.score));
 	}
 }

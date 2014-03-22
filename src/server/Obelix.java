@@ -13,11 +13,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import util.BullyElectedBerkeleySynchronized;
 import util.RegistryService;
+import util.ServerDetail;
 import base.Athlete;
 import base.Event;
 import base.EventCategories;
-import base.MedalCategories;
 import base.NationCategories;
 import base.OlympicException;
 import base.Results;
@@ -30,7 +31,8 @@ import client.TabletInterface;
  * @author sandeep
  * 
  */
-public class Obelix implements ObelixInterface {
+public class Obelix extends BullyElectedBerkeleySynchronized implements ObelixInterface {
+	
 	/**
 	 * Various data structures forming Obelix's database for the games.
 	 */
@@ -46,13 +48,16 @@ public class Obelix implements ObelixInterface {
 
 	// To prevent the server from being garbage collected.
 	private static Obelix obelixServerInstance;
-	private static String orgetorixName = "Orgetorix";
-
+	private static String OBELIX_SERVICE_NAME = "Obelix";
+	private static String ORGETORIX_SERVICE_NAME = "Orgetorix";
 	private static String JAVA_RMI_HOSTNAME_PROPERTY = "java.rmi.server.hostname";
 	private static int JAVA_RMI_PORT = 1099;
+	private static String SERVICE_FINDER_HOST;
+	
 	private OrgetorixInterface orgetorixStub;
 
-	public Obelix() {
+	public Obelix(String serviceFinderHost) {
+		super(OBELIX_SERVICE_NAME, serviceFinderHost);
 		this.completedEvents = new HashSet<Event>();
 		this.medalTallies = new HashMap<NationCategories, Tally>();
 		this.scores = new HashMap<EventCategories, ArrayList<Athlete>>();
@@ -64,13 +69,14 @@ public class Obelix implements ObelixInterface {
 		}
 	}
 
-	private void setupOrgetorixStub(String orgetorixHost)
+	private void setupOrgetorixStub()
 			throws OlympicException {
 		Registry registry = null;
 		try {
-			registry = LocateRegistry.getRegistry(orgetorixHost, JAVA_RMI_PORT);
+			ServerDetail orgetorixDetail = this.getServerDetail(ORGETORIX_SERVICE_NAME);
+			registry = LocateRegistry.getRegistry(orgetorixDetail.getServiceAddress(), JAVA_RMI_PORT);
 			OrgetorixInterface orgetorixStub = (OrgetorixInterface) registry
-					.lookup(orgetorixName);
+					.lookup(orgetorixDetail.getServerName());
 			this.orgetorixStub = orgetorixStub;
 		} catch (Exception e) {
 			throw new OlympicException("Could not set up Orgetorix Stub.");
@@ -79,7 +85,7 @@ public class Obelix implements ObelixInterface {
 
 	private static Obelix getObelixInstance() {
 		if (Obelix.obelixServerInstance == null) {
-			Obelix.obelixServerInstance = new Obelix();
+			Obelix.obelixServerInstance = new Obelix(Obelix.SERVICE_FINDER_HOST);
 		}
 		return Obelix.obelixServerInstance;
 	}
@@ -327,22 +333,22 @@ public class Obelix implements ObelixInterface {
 	private void setupObelixServer(RegistryService regService)
 			throws IOException, OlympicException {
 		Registry registry = null;
-		String SERVER_NAME = "Obelix";
-
+		
+		this.register(OBELIX_SERVICE_NAME, regService.getLocalIPAddress());
 		ObelixInterface serverStub = (ObelixInterface) UnicastRemoteObject
 				.exportObject(Obelix.getObelixInstance(), 0);
 		try {
 			registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
-			registry.rebind(SERVER_NAME, serverStub);
+			registry.rebind(this.getServerName(), serverStub);
 			System.err.println("Registry Service running at "
 					+ regService.getLocalIPAddress() + ".");
 			System.err.println("Obelix ready.");
 		} catch (RemoteException e) {
 			regService.setupLocalRegistry();
 			registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
-			registry.rebind(SERVER_NAME, serverStub);
+			registry.rebind(this.getServerName(), serverStub);
 			System.err.println("New Registry Service created. Obelix ready.");
-		}
+		}	
 	}
 
 	/**
@@ -355,14 +361,15 @@ public class Obelix implements ObelixInterface {
 	public static void main(String args[]) throws OlympicException {
 
 		// Bind the remote object's stub in the registry
+		Obelix.SERVICE_FINDER_HOST = (args.length < 1) ? null : args[0];
 		Obelix obelixInstance = Obelix.getObelixInstance();
-		String orgetorixHost = args[0];
 		try {
 			RegistryService regService = new RegistryService();
 			System.setProperty(JAVA_RMI_HOSTNAME_PROPERTY,
 					regService.getLocalIPAddress());
 			obelixInstance.setupObelixServer(regService);
-			obelixInstance.setupOrgetorixStub(orgetorixHost);
+			obelixInstance.setupOrgetorixStub();
+			obelixInstance.initiateElection();
 		} catch (IOException e) {
 			throw new OlympicException(
 					"Registry Service could not be created.", e);
