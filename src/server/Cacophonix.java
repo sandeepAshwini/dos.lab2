@@ -136,4 +136,10 @@ public class Cacophonix extends ServiceComponent implements CacophonixInterface 
 		}
 		return clientStub;
     }
+
+	@Override
+	public String conductLottery() throws RemoteException {
+		ObelixInterface lotteryStub = setupClientInstance();
+		return lotteryStub.conductLottery();
+	}
 }

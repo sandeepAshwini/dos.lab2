@@ -15,7 +15,7 @@ import client.Tablet;
  */
 public class TabletSimulator {
 	
-	private static int DEFAULT_TABLET_LIMIT = 3;
+	private static int DEFAULT_TABLET_LIMIT = 10;
 	
 	/**
 	 * Creates and deploys N tablets as specified to be used for testing.

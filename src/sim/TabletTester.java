@@ -26,9 +26,9 @@ public class TabletTester implements Runnable
 	private static int CLIENT_PULL_REQUESTS_ONLY = 3;
 	
 	//Simulation parameters
-	private static int SLEEP_INTERVAL = 5000;
-	private static int MIN_REQUESTS = 5;
-	private static int RANGE = 10;
+	private static int SLEEP_INTERVAL = 1000;
+	private static int MIN_REQUESTS = 100;
+	private static int RANGE = 200;
 	private boolean allowServerPush = false;
 	
 	/**

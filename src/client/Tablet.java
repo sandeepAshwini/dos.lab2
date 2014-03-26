@@ -263,7 +263,7 @@ public class Tablet extends ServiceComponent implements TabletInterface {
     }
     
     public void getResults(EventCategories eventType) throws RemoteException {
-    	Results result = obelixStub.getResults(eventType);
+    	Results result = obelixStub.getResults(eventType, this.getServerName());
     	if (result != null) {
     		this.printCurrentResult(eventType, result);
     	} else {
@@ -301,7 +301,7 @@ public class Tablet extends ServiceComponent implements TabletInterface {
     public void updateMedalTallies() throws RemoteException {
     	synchronized(medalTallies) {
     		for(NationCategories nation : NationCategories.values()) {
-    			this.medalTallies.put(nation, this.obelixStub.getMedalTally(nation));
+    			this.medalTallies.put(nation, this.obelixStub.getMedalTally(nation, this.getServerName()));
     		}
     	}		
     }
@@ -327,7 +327,7 @@ public class Tablet extends ServiceComponent implements TabletInterface {
     }
     
     public void getCurrentScore(EventCategories eventType) throws RemoteException {
-    	List<Athlete> scores = this.obelixStub.getCurrentScores(eventType);
+    	List<Athlete> scores = this.obelixStub.getCurrentScores(eventType, this.getServerName());
     	if(scores != null && scores.size() != 0) {
     		printCurrentScore(eventType, scores);
     	} else {

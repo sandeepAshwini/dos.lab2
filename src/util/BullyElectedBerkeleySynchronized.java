@@ -11,6 +11,7 @@ public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 		implements BullyElectable, BerkeleySynchronizable {
 
 	public long clockOffset = 0;
+	protected VectorOrdered timeStamp;
 	private String timeServerName;
 	private static String[] serviceNames = { "Obelix", "Orgetorix" };
 	private static int JAVA_RMI_PORT = 1099;
@@ -20,6 +21,7 @@ public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 	public BullyElectedBerkeleySynchronized(String serviceName,
 			String serviceFinderHost) {
 		super(serviceName, serviceFinderHost);
+		this.timeStamp = new VectorOrdered(this.PID);
 	}
 
 	public void initiateElection() {
@@ -30,7 +32,7 @@ public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 		}
 	}
 
-	BullyElectable getBullyElectableClientStub(ServerDetail participant)
+	public BullyElectable getBullyElectableClientStub(ServerDetail participant)
 			throws RemoteException {
 		Registry registry = null;
 		BullyElectable client = null;
@@ -60,15 +62,21 @@ public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 		return client;
 	}
 
-	List<ServerDetail> findAllParticipants() throws RemoteException {
+	public List<ServerDetail> findAllParticipants() throws RemoteException {
 		List<ServerDetail> participants = new ArrayList<ServerDetail>();
 		for (String serviceName : serviceNames) {
-			participants.addAll(getServerDetails(serviceName));
+			participants.addAll(findAllParticipants(serviceName));
 		}
 		return participants;
 	}
 
-	@Override
+	public List<ServerDetail> findAllParticipants(String serviceName)
+			throws RemoteException {
+		List<ServerDetail> participants = new ArrayList<ServerDetail>();
+		participants.addAll(getServerDetails(serviceName));
+		return participants;
+	}
+
 	public void notifyVictory(String callerServerName) throws RemoteException {
 		this.timeServerName = callerServerName;
 		System.out.println("Elected time server: " + this.timeServerName);
@@ -143,6 +151,13 @@ public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 	public boolean isElectedTimeServer() {
 		return this.timeServerName.equals(this.getServerName());
 	}
+
+	public void notifyTimestamp(VectorOrdered incomingTimeVector) throws RemoteException {
+		synchronized (this.timeStamp) {
+			this.timeStamp.synchronizeVector(incomingTimeVector);
+		}
+	}
+
 }
 
 class BerkeleySynchronizer implements Runnable {
@@ -160,7 +175,7 @@ class BerkeleySynchronizer implements Runnable {
 
 	@Override
 	public void run() {
-		while(true){
+		while (true) {
 			if (this.timeServer.isElectedTimeServer()) {
 				try {
 					List<ServerDetail> participants = this.timeServer
@@ -172,8 +187,9 @@ class BerkeleySynchronizer implements Runnable {
 						BerkeleySynchronizable clientStub = timeServer
 								.getBerkeleySynchronizableClientStub(participant);
 						if (clientStub != null) {
-							System.out.println("Sending getTime msg to " + participant.getServerName() + ".");
-							long participantTime = clientStub.getTime(); 
+							System.out.println("Sending getTime msg to "
+									+ participant.getServerName() + ".");
+							long participantTime = clientStub.getTime();
 							participantTimes.add(participantTime);
 							average += participantTime;
 						}
@@ -186,8 +202,11 @@ class BerkeleySynchronizer implements Runnable {
 						BerkeleySynchronizable clientStub = timeServer
 								.getBerkeleySynchronizableClientStub(participant);
 						if (clientStub != null) {
-							long clockOffset = (long)average - participantTimes.get(participantIndex++);
-							System.out.println("Sending setClockOffset msg to " + participant.getServerName() + ". Clock offset: " + clockOffset);
+							long clockOffset = (long) average
+									- participantTimes.get(participantIndex++);
+							System.out.println("Sending setClockOffset msg to "
+									+ participant.getServerName()
+									+ ". Clock offset: " + clockOffset);
 							clientStub.setClockOffset(clockOffset);
 						}
 					}
@@ -195,7 +214,7 @@ class BerkeleySynchronizer implements Runnable {
 					e.printStackTrace();
 				}
 			}
-			
+
 			try {
 				Thread.sleep(CLOCK_SYNC_INTERVAL);
 			} catch (InterruptedException e) {

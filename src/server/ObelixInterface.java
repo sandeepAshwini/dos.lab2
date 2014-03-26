@@ -19,8 +19,11 @@ import base.Tally;
 public interface ObelixInterface extends Remote {
 	public void updateResultsAndTallies(Event simulatedEvent) throws RemoteException ;
 	public void updateCurrentScores(EventCategories eventType, List<Athlete> currentScores) throws RemoteException;
-	public Tally getMedalTally(NationCategories teamName) throws RemoteException;
-	public Results getResults(EventCategories eventName) throws RemoteException;
-	public List<Athlete> getCurrentScores(EventCategories eventName) throws RemoteException;
+	public Tally getMedalTally(NationCategories teamName, String clientID) throws RemoteException;
+	public Results getResults(EventCategories eventName, String clientID) throws RemoteException;
+	public List<Athlete> getCurrentScores(EventCategories eventName, String clientID) throws RemoteException;
 	public void registerClient(String clientID, String clientHost, EventCategories eventName) throws RemoteException;
+	public String conductLottery() throws RemoteException;
+	
+	
 }

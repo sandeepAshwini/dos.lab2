@@ -15,4 +15,6 @@ import base.Event;
 public interface CacophonixInterface extends Remote {
 	public void updateResultsAndTallies(Event simulatedEvent) throws RemoteException;
 	public void updateCurrentScores(Event simulatedEvent, List<Athlete> currentScores) throws RemoteException;
+	public String conductLottery() throws RemoteException;
+	
 }

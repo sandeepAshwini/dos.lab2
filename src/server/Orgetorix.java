@@ -19,17 +19,18 @@ import java.util.UUID;
 
 import util.BullyElectedBerkeleySynchronized;
 import util.RegistryService;
+import util.VectorOrdered;
 import base.Athlete;
 import base.Event;
 import base.EventCategories;
 import base.MedalCategories;
 import base.NationCategories;
 import base.OlympicException;
-import base.Printable;
 import base.Results;
 import base.Tally;
 
-public class Orgetorix extends BullyElectedBerkeleySynchronized implements OrgetorixInterface {
+public class Orgetorix extends BullyElectedBerkeleySynchronized implements
+		OrgetorixInterface {
 	private static String JAVA_RMI_HOSTNAME_PROPERTY = "java.rmi.server.hostname";
 	private static int JAVA_RMI_PORT = 1099;
 	private static String FILE_LOCATION = "./";
@@ -66,7 +67,7 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements Orget
 		Map<EventCategories, ArrayList<Athlete>> scores = new HashMap<EventCategories, ArrayList<Athlete>>();
 		for (EventCategories event : EventCategories.values()) {
 			scores.put(event, new ArrayList<Athlete>());
-			for(Athlete athleteScore : scores.get(event)) {
+			for (Athlete athleteScore : scores.get(event)) {
 				athleteScore.setTimestamp(this.getTime());
 			}
 		}
@@ -83,11 +84,11 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements Orget
 	private void updateResults(Event completedEvent) throws RemoteException {
 		Set<Event> completedEvents = readResultFile();
 		completedEvents.add(completedEvent);
-		
+
 		for (Event event : completedEvents) {
 			event.getResult().setTimestamp(this.getTime());
 		}
-			
+
 		writeToDatabase(completedEvents, this.resultFileName);
 	}
 
@@ -97,11 +98,11 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements Orget
 			medalTallies.get(eventResult.getTeam(medalType)).incrementTally(
 					medalType);
 		}
-		
+
 		for (NationCategories nation : medalTallies.keySet()) {
 			medalTallies.get(nation).setTimestamp(this.getTime());
 		}
-		
+
 		writeToDatabase(medalTallies, this.tallyFileName);
 	}
 
@@ -113,7 +114,7 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements Orget
 			athleteScore.setTimestamp(this.getTime());
 		}
 		scores.put(eventType, (ArrayList<Athlete>) currentScores);
-		
+
 		writeToDatabase(scores, this.scoreFileName);
 	}
 
@@ -187,10 +188,11 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements Orget
 		}
 		return object;
 	}
-	
+
 	private static Orgetorix getOrgetorixInstance() {
 		if (Orgetorix.orgetorixServerInstance == null) {
-			Orgetorix.orgetorixServerInstance = new Orgetorix(Orgetorix.SERVICE_FINDER_HOST);
+			Orgetorix.orgetorixServerInstance = new Orgetorix(
+					Orgetorix.SERVICE_FINDER_HOST);
 		}
 		return Orgetorix.orgetorixServerInstance;
 	}
@@ -198,7 +200,7 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements Orget
 	private void setupOrgetorixServer(RegistryService regService)
 			throws IOException, OlympicException {
 		Registry registry = null;
-		
+
 		this.register(ORGETORIX_SERVICE_NAME, regService.getLocalIPAddress());
 		OrgetorixInterface serverStub = (OrgetorixInterface) UnicastRemoteObject
 				.exportObject(Orgetorix.getOrgetorixInstance(), 0);
@@ -218,7 +220,6 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements Orget
 	}
 
 	public static void main(String[] args) throws OlympicException {
-		// Bind the remote object's stub in the registry
 		Orgetorix.SERVICE_FINDER_HOST = (args.length < 1) ? null : args[0];
 		Orgetorix orgetorixInstance = Orgetorix.getOrgetorixInstance();
 
@@ -233,4 +234,9 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements Orget
 					"Registry Service could not be created.", e);
 		}
 	}
+
+	public void notifyTimeStamp(VectorOrdered timeStamp) throws RemoteException {
+		super.notifyTimestamp(timeStamp);
+	}
+
 }
