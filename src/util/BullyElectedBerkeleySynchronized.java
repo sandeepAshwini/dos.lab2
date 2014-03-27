@@ -7,6 +7,12 @@ import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Encapsulates an implementation for a Bully electable and Berkeley
+ * Synchronizable server process.
+ * 
+ * @author aravind
+ */
 public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 		implements BullyElectable, BerkeleySynchronizable {
 
@@ -32,6 +38,12 @@ public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 		}
 	}
 
+	/**
+	 * Sets up a client stub of type BullyElectable.
+	 * 
+	 * @param participant
+	 * @throws RemoteException
+	 */
 	public BullyElectable getBullyElectableClientStub(ServerDetail participant)
 			throws RemoteException {
 		Registry registry = null;
@@ -47,6 +59,12 @@ public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 		return client;
 	}
 
+	/**
+	 * Sets up a client stub of type BerkeleySynchronizable.
+	 * 
+	 * @param participant
+	 * @throws RemoteException
+	 */
 	BerkeleySynchronizable getBerkeleySynchronizableClientStub(
 			ServerDetail participant) throws RemoteException {
 		Registry registry = null;
@@ -62,6 +80,14 @@ public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 		return client;
 	}
 
+	/**
+	 * Retrieves all Obelix and Orgetorix servers currently registered with
+	 * {@link ServiceFinder}.
+	 * 
+	 * @return Server details for all Obelix and Orgetorix servers currently
+	 *         registered with {@link ServiceFinder}.
+	 * @throws RemoteException
+	 */
 	public List<ServerDetail> findAllParticipants() throws RemoteException {
 		List<ServerDetail> participants = new ArrayList<ServerDetail>();
 		for (String serviceName : serviceNames) {
@@ -70,18 +96,38 @@ public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 		return participants;
 	}
 
+	/**
+	 * Retrieves all servers offering a specified service and registered with
+	 * {@link ServiceFinder}.
+	 * 
+	 * @param serviceName
+	 * @return Server details for all servers offering the service serviceName.
+	 * @throws RemoteException
+	 */
 	public List<ServerDetail> findAllParticipants(String serviceName)
 			throws RemoteException {
 		List<ServerDetail> participants = new ArrayList<ServerDetail>();
-		participants.addAll(getServerDetails(serviceName));
+		participants.addAll(getServersDetails(serviceName));
 		return participants;
 	}
 
+	/**
+	 * Utility function to broadcast victory message at the end of the election.
+	 * Sets the current timeserver to the specified server name.
+	 * 
+	 * @param callerServerName
+	 */
+	@Override
 	public void notifyVictory(String callerServerName) throws RemoteException {
 		this.timeServerName = callerServerName;
 		System.out.println("Elected time server: " + this.timeServerName);
 	}
 
+	/**
+	 * Implements leader election based on the Bully Election algorithm.
+	 * 
+	 * @param callerPID
+	 */
 	@Override
 	public void startElection(int callerPID) throws RemoteException {
 		List<ServerDetail> participants = findAllParticipants();
@@ -127,32 +173,59 @@ public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 		}
 	}
 
+	/**
+	 * Utility function to wait for end of election.
+	 */
 	private void waitForEndOfElection() {
 		while (!this.electionEnded)
 			;
 		this.electionEnded = false;
 	}
 
+	/**
+	 * Utility function to send 'Alive' message, that causes current process to
+	 * stop waiting.
+	 */
 	@Override
 	public void notifyAlive() throws RemoteException {
 		this.electionEnded = true;
 	}
 
+	/**
+	 * Retreives the current local time.
+	 */
 	@Override
 	public long getTime() throws RemoteException {
 		return (System.currentTimeMillis() + clockOffset);
 	}
 
+	/**
+	 * Utility function to send clock offsets from time server to other
+	 * processes.
+	 */
 	@Override
 	public void setClockOffset(long clockOffset) throws RemoteException {
 		this.clockOffset = clockOffset;
 	}
 
+	/**
+	 * Utility function to check if current process is the time server.
+	 * 
+	 * @return If current process is the elected time server, true otherwise
+	 *         false.
+	 */
 	public boolean isElectedTimeServer() {
 		return this.timeServerName.equals(this.getServerName());
 	}
 
-	public VectorClock notifyTimestamp(Integer callerID, VectorClock incomingTimeVector) throws RemoteException {
+	/**
+	 * Multicasts the current timestamp to other processes.
+	 * 
+	 * @return Updated timestamp of the current process.
+	 */
+	@Override
+	public VectorClock notifyTimestamp(Integer callerID,
+			VectorClock incomingTimeVector) throws RemoteException {
 		synchronized (this.timeStamp) {
 			this.timeStamp.synchronizeVector(callerID, incomingTimeVector);
 			return this.timeStamp;
@@ -161,6 +234,12 @@ public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 
 }
 
+/**
+ * Encapsulates the functionality of the Berkeley Synchronization algorithm.
+ * 
+ * @author aravind
+ * 
+ */
 class BerkeleySynchronizer implements Runnable {
 
 	private BullyElectedBerkeleySynchronized timeServer;
@@ -174,6 +253,11 @@ class BerkeleySynchronizer implements Runnable {
 		this.timeServer = timeServer;
 	}
 
+	/**
+	 * Periodically polls other processes for their local time, averages
+	 * (accounting for transmission delay as one half of Round Trip Time) and
+	 * sends out clock offset messages to correct local time of other processes.
+	 */
 	@Override
 	public void run() {
 		while (true) {

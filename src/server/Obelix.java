@@ -34,6 +34,10 @@ import client.TabletInterface;
  * @author sandeep
  * 
  */
+/**
+ * @author aravind
+ * 
+ */
 public class Obelix extends BullyElectedBerkeleySynchronized implements
 		ObelixInterface {
 
@@ -76,11 +80,17 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 		}
 	}
 
+	/**
+	 * Sets up the Orgetorix (backend process) client stub by looking up the
+	 * address using {@link ServiceFinder}
+	 * 
+	 * @throws OlympicException
+	 */
 	private void setupOrgetorixStub() throws OlympicException {
 		Registry registry = null;
 		try {
 			ServerDetail orgetorixDetail = this
-					.getServerDetail(ORGETORIX_SERVICE_NAME);
+					.getServerDetails(ORGETORIX_SERVICE_NAME);
 			registry = LocateRegistry.getRegistry(
 					orgetorixDetail.getServiceAddress(), JAVA_RMI_PORT);
 			OrgetorixInterface orgetorixStub = (OrgetorixInterface) registry
@@ -175,7 +185,13 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 
 	}
 
-	private void test(String clientID) {
+	/**
+	 * Tests the vector clock implementation (totally ordered multicasting and
+	 * synchronization) by checking against a global request counter.
+	 * 
+	 * @param clientID
+	 */
+	private void testVectorClock(String clientID) {
 		synchronized (requestCounter) {
 			requestCounter++;
 			if (requestCounter % Lottery.lotteryEnterFrequency == 0) {
@@ -345,7 +361,8 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 	}
 
 	/**
-	 * Helper function to setup the server at Obelix.
+	 * Helper function to setup the server at Obelix and register with
+	 * {@link ServiceFinder}.
 	 * 
 	 * @param regService
 	 * @throws IOException
@@ -397,18 +414,33 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 
 	}
 
+	/**
+	 * Notifies the occurrence of a new event by synchronizing current process
+	 * timestamp with other processes. Each new request received counts as a new
+	 * event.
+	 * 
+	 * @param participantID
+	 * @throws RemoteException
+	 */
 	private void notifyEvent(String participantID) throws RemoteException {
 		long timestampValue = this.syncServers();
-		this.test(participantID);
+		this.testVectorClock(participantID);
 		if (timestampValue % Lottery.lotteryEnterFrequency == 0) {
 			System.out.println("Entering " + participantID + " into lottery.");
 			synchronized (lottery) {
 				lottery.addParticipant(participantID);
 			}
 		}
-		
+
 	}
 
+	/**
+	 * Implements totally-ordered multicasting. Multicasts current process
+	 * timestamp and waits for updated timestamps from all processes.
+	 * 
+	 * @return Update timestamp for current process
+	 * @throws RemoteException
+	 */
 	private synchronized long syncServers() throws RemoteException {
 		this.timeStamp.incrementMyTime();
 		List<ServerDetail> participants = findAllParticipants(OBELIX_SERVICE_NAME);
@@ -418,23 +450,22 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 				continue;
 			}
 			BullyElectable clientStub = getBullyElectableClientStub(participant);
-			vectorClocks.add(clientStub.notifyTimeStamp(this.timeStamp));
+			vectorClocks.add(clientStub.notifyTimestamp(this.PID,
+					this.timeStamp));
 		}
 		for (VectorClock vectorClock : vectorClocks) {
 			this.timeStamp.synchronizeVector(this.PID, vectorClock);
 		}
 
 		return this.timeStamp.getCurrentTimeStamp();
-
 	}
 
+	/**
+	 * Utility function that initiates the lottery draw.
+	 * 
+	 * @return clientID of the winner of the lottery.
+	 */
 	public String conductLottery() {
 		return lottery.conductDraw();
 	}
-
-	public VectorClock notifyTimeStamp(VectorClock timeStamp)
-			throws RemoteException {
-		return super.notifyTimestamp(this.PID, timeStamp);
-	}
-
 }

@@ -13,6 +13,12 @@ import util.RegistryService;
 import util.ServerDetail;
 import base.OlympicException;
 
+/**
+ * Encapsulates a centralized service discovery process.
+ * 
+ * @author aravind
+ * 
+ */
 public class ServiceFinder implements ServiceFinderInterface {
 
 	private static Random random;
@@ -47,6 +53,14 @@ public class ServiceFinder implements ServiceFinderInterface {
 		return ServiceFinder.serviceFinderInstance;
 	}
 
+	/**
+	 * Sets up the ServiceFinder server that can be used by all other processes
+	 * to discover other services.
+	 * 
+	 * @param regService
+	 * @throws IOException
+	 * @throws OlympicException
+	 */
 	private void setupServiceFinder(RegistryService regService)
 			throws IOException, OlympicException {
 		Registry registry = null;
@@ -70,20 +84,41 @@ public class ServiceFinder implements ServiceFinderInterface {
 		}
 	}
 
+	/**
+	 * Registers a server offering a specified service.
+	 * 
+	 * @param serviceName
+	 * @param PID
+	 * @param address
+	 */
 	@Override
 	public void registerService(String serviceName, int PID, String address)
 			throws RemoteException {
 		this.services.add(new ServerDetail(serviceName, PID, address));
 	}
 
+	/**
+	 * Retrieves the service matching the specified service name. If multiple
+	 * servers offer same service, returns any one of them randomly, all having
+	 * equal chance to be selected.
+	 * 
+	 * @return The server details for the specified service name.
+	 * @param serviceName
+	 */
 	@Override
 	public ServerDetail getService(String serviceName) throws RemoteException {
-		List<ServerDetail> matchingServices = getServices(serviceName);		
+		List<ServerDetail> matchingServices = getServices(serviceName);
 		return matchingServices.get(random.nextInt(matchingServices.size()));
 	}
-	
+
+	/**
+	 * Retrieves all servers matching the specified service name.
+	 * 
+	 * @return The server details of all servers offering the specified service.
+	 */
 	@Override
-	public List<ServerDetail> getServices(String serviceName) throws RemoteException {
+	public List<ServerDetail> getServices(String serviceName)
+			throws RemoteException {
 		List<ServerDetail> matchingServices = new ArrayList<ServerDetail>();
 		for (ServerDetail curServerDetail : this.services) {
 			if (curServerDetail.getServiceName().equals(serviceName)) {

@@ -2,14 +2,20 @@ package util;
 
 import java.io.Serializable;
 
+/**
+ * Describes a server offering a specified service with a server name and the
+ * address on which it is hosted.
+ * 
+ * @author aravind
+ * 
+ */
 public class ServerDetail implements Serializable {
 	private static final long serialVersionUID = -7853196643095509724L;
 	private String serviceName;
 	private int PID;
 	private String serviceAddress;
 
-	public ServerDetail(String serviceName, int PID,
-			String serviceAddress) {
+	public ServerDetail(String serviceName, int PID, String serviceAddress) {
 		this.serviceName = serviceName;
 		this.PID = PID;
 		this.serviceAddress = serviceAddress;
@@ -38,7 +44,7 @@ public class ServerDetail implements Serializable {
 	public void setServiceAddress(String serviceAddress) {
 		this.serviceAddress = serviceAddress;
 	}
-	
+
 	public String getServerName() {
 		return this.serviceName + this.PID;
 	}

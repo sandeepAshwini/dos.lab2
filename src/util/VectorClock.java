@@ -3,6 +3,12 @@ package util;
 import java.io.Serializable;
 import java.util.HashMap;
 
+/**
+ * Encapsulates an implementation of Vector clocks.
+ * 
+ * @author aravind
+ * 
+ */
 public class VectorClock implements Serializable {
 	private static final long serialVersionUID = 910351590403500446L;
 	private HashMap<Integer, Long> timeVector;
@@ -14,6 +20,12 @@ public class VectorClock implements Serializable {
 		this.PID = PID;
 	}
 
+	/**
+	 * Synchronizes own time vector with an incoming time vector.
+	 * 
+	 * @param callerID
+	 * @param incomingVector
+	 */
 	public void synchronizeVector(int callerID, VectorClock incomingVector) {
 		/*
 		 * while (!causalConditionsSatisfied(callerID, incomingVector)) { try {
@@ -43,14 +55,29 @@ public class VectorClock implements Serializable {
 		return false;
 	}
 
+	/**
+	 * Retreives the clock value for a specified process ID.
+	 * 
+	 * @param id
+	 * @return
+	 */
 	public Long getValue(int id) {
 		return this.timeVector.get(id);
 	}
 
+	/**
+	 * Updates the clock value for a specified process ID.
+	 * 
+	 * @param id
+	 * @param value
+	 */
 	public void updateValue(int id, long value) {
 		this.timeVector.put(id, value);
 	}
 
+	/**
+	 * Increments the current time by 1.
+	 */
 	public void incrementMyTime() {
 		if (this.timeVector.containsKey(this.PID)) {
 			this.timeVector.put(this.PID, this.timeVector.get(this.PID) + 1);
@@ -59,6 +86,9 @@ public class VectorClock implements Serializable {
 		}
 	}
 
+	/**
+	 * @return The sum of all the clock values in the time vector.
+	 */
 	public Long getCurrentTimeStamp() {
 		Long timestamp = 0L;
 		synchronized (this.timeVector) {

@@ -29,6 +29,14 @@ import base.OlympicException;
 import base.Results;
 import base.Tally;
 
+/**
+ * Encapsulates the backend database process responsible for storage and
+ * retrieval of updated scores, results and medal tallies. The database is
+ * stored as files on disk.
+ * 
+ * @author aravind
+ * 
+ */
 public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 		OrgetorixInterface {
 	private static String JAVA_RMI_HOSTNAME_PROPERTY = "java.rmi.server.hostname";
@@ -56,6 +64,12 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 		}
 	}
 
+	/**
+	 * Initializes the database with empty records of scores, results and
+	 * tallies.
+	 * 
+	 * @throws RemoteException
+	 */
 	private void initializeDatabase() throws RemoteException {
 		this.writeToDatabase(new HashSet<Event>(), this.resultFileName);
 		Map<NationCategories, Tally> medalTallies = new HashMap<NationCategories, Tally>();
@@ -74,6 +88,12 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 		this.writeToDatabase(scores, this.scoreFileName);
 	}
 
+	/**
+	 * Updates the results and tallies of a specified event in the database.
+	 * 
+	 * @param simulatedEvent
+	 * @throws RemoteException
+	 */
 	@Override
 	public void updateResultsAndTallies(Event simulatedEvent)
 			throws RemoteException {
@@ -81,6 +101,12 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 		updateMedalTallies(simulatedEvent.getResult());
 	}
 
+	/**
+	 * Updates the results of a specified event in the database.
+	 * 
+	 * @param completedEvent
+	 * @throws RemoteException
+	 */
 	private void updateResults(Event completedEvent) throws RemoteException {
 		Set<Event> completedEvents = readResultFile();
 		completedEvents.add(completedEvent);
@@ -92,6 +118,12 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 		writeToDatabase(completedEvents, this.resultFileName);
 	}
 
+	/**
+	 * Updates the medal tallies in the database at the end of an event.
+	 * 
+	 * @param eventResult
+	 * @throws RemoteException
+	 */
 	private void updateMedalTallies(Results eventResult) throws RemoteException {
 		Map<NationCategories, Tally> medalTallies = readTallyFile();
 		for (MedalCategories medalType : MedalCategories.values()) {
@@ -106,6 +138,13 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 		writeToDatabase(medalTallies, this.tallyFileName);
 	}
 
+	/**
+	 * Updates the current scores for a specified event type in the database.
+	 * 
+	 * @param eventType
+	 * @param currentScores
+	 * @throws RemoteException
+	 */
 	@Override
 	public void updateCurrentScores(EventCategories eventType,
 			List<Athlete> currentScores) throws RemoteException {
@@ -118,6 +157,13 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 		writeToDatabase(scores, this.scoreFileName);
 	}
 
+	/**
+	 * Retreives the medal tally for a specific team name from the database.
+	 * 
+	 * @param teamName
+	 * @return The updated medal tally for teamName.
+	 * @throws RemoteException
+	 */
 	@Override
 	public Tally getMedalTally(NationCategories teamName)
 			throws RemoteException {
@@ -126,6 +172,13 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 
 	}
 
+	/**
+	 * Retreived the results for a specified event from the database.
+	 * 
+	 * @param eventName
+	 * @return The final results for eventName if the event has ended.
+	 * @throws RemoteException
+	 */
 	@Override
 	public Results getResults(EventCategories eventName) throws RemoteException {
 		Set<Event> completedEvents = readResultFile();
@@ -137,6 +190,13 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 		return null;
 	}
 
+	/**
+	 * Retreives the latest scores for a specified event from the database.
+	 * 
+	 * @param eventName
+	 * @return The latest scores for eventName.
+	 * @throws RemoteException
+	 */
 	@Override
 	public List<Athlete> getCurrentScores(EventCategories eventName)
 			throws RemoteException {
@@ -144,21 +204,36 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 		return scores.get(eventName);
 	}
 
+	/**
+	 * Utility function to read the result file.
+	 */
 	private Set<Event> readResultFile() {
 		Set<Event> completedEvents = (Set<Event>) readFromDatabase(this.resultFileName);
 		return completedEvents;
 	}
 
+	/**
+	 * Utility function to read the medal tally file.
+	 */
 	private Map<NationCategories, Tally> readTallyFile() {
 		Map<NationCategories, Tally> medalTallies = (Map<NationCategories, Tally>) readFromDatabase(this.tallyFileName);
 		return medalTallies;
 	}
 
+	/**
+	 * Utility function to read the score file.
+	 */
 	private Map<EventCategories, ArrayList<Athlete>> readScoreFile() {
 		Map<EventCategories, ArrayList<Athlete>> scores = (Map<EventCategories, ArrayList<Athlete>>) readFromDatabase(this.scoreFileName);
 		return scores;
 	}
 
+	/**
+	 * Utility function to serialize an object to a file (database).
+	 * 
+	 * @param object
+	 * @param filename
+	 */
 	private synchronized void writeToDatabase(Object object, String filename) {
 		try {
 			FileOutputStream fileOut = new FileOutputStream(filename);
@@ -172,6 +247,12 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 		}
 	}
 
+	/**
+	 * Utility function to deserialize an object from a file.
+	 * 
+	 * @param filename
+	 * @return
+	 */
 	private synchronized Object readFromDatabase(String filename) {
 		Object object = null;
 		try {
@@ -197,6 +278,14 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 		return Orgetorix.orgetorixServerInstance;
 	}
 
+	/**
+	 * Sets up the Orgetorix server stub and registers itself with
+	 * {@link ServiceFinder}
+	 * 
+	 * @param regService
+	 * @throws IOException
+	 * @throws OlympicException
+	 */
 	private void setupOrgetorixServer(RegistryService regService)
 			throws IOException, OlympicException {
 		Registry registry = null;
@@ -234,9 +323,4 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 					"Registry Service could not be created.", e);
 		}
 	}
-
-	public VectorClock notifyTimeStamp(VectorClock timeStamp) throws RemoteException {
-		return super.notifyTimestamp(this.PID, timeStamp);
-	}
-
 }

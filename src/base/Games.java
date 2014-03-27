@@ -90,7 +90,10 @@ public class Games extends ServiceComponent {
 	 * the other with a pre defined break between them. Scores of the current
 	 * event are updated every 5 seconds by sending a message to Cacophonix.
 	 * Once an event is completed, the Results and Medal Tallies are updated by
-	 * sending a message to Cacophonix.
+	 * sending a message to Cacophonix. 
+	 * 
+	 * At the end of the simulation it
+	 * initiates the lottery by sending a message to Cacophonix.
 	 * 
 	 * @param args
 	 * @throws OlympicException
@@ -107,7 +110,7 @@ public class Games extends ServiceComponent {
 		game.printGameIntro();
 		try {
 			ServerDetail cacophonixDetail = game
-					.getServerDetail(CACOPHONIX_SERVICE_NAME);
+					.getServerDetails(CACOPHONIX_SERVICE_NAME);
 			Registry registry = LocateRegistry.getRegistry(
 					cacophonixDetail.getServiceAddress(), JAVA_RMI_PORT);
 			final CacophonixInterface stub = (CacophonixInterface) registry
@@ -142,6 +145,12 @@ public class Games extends ServiceComponent {
 
 	}
 
+	/**
+	 * Utility function to print a congratulatory message at the end of the
+	 * lottery.
+	 * 
+	 * @param winner
+	 */
 	public static void printCongratulatoryMsg(String winner) {
 		System.out
 				.println(String

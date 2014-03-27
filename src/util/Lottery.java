@@ -4,6 +4,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Random;
 
+/**
+ * Encapsulates the lottery draw functionality.
+ * 
+ * @author aravind
+ * 
+ */
 public class Lottery implements Serializable {
 
 	private static final long serialVersionUID = 5505253127956256012L;
@@ -16,10 +22,20 @@ public class Lottery implements Serializable {
 		this.participants = new ArrayList<String>();
 	}
 
+	/**
+	 * Adds a new participant to the list of participants.
+	 * 
+	 * @param participantID
+	 */
 	public void addParticipant(String participantID) {
 		this.participants.add(participantID);
 	}
 
+	/**
+	 * Conducts the lucky draw and reports a random winner.
+	 * 
+	 * @return
+	 */
 	public String conductDraw() {
 		synchronized (this.drawCompleted) {
 			if (!this.drawCompleted) {
@@ -37,7 +53,5 @@ public class Lottery implements Serializable {
 				return this.winner;
 			}
 		}
-
 	}
-
 }

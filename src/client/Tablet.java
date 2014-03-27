@@ -110,7 +110,7 @@ public class Tablet extends ServiceComponent implements TabletInterface {
     public static Tablet deployTablet(String serviceFinderHost) throws OlympicException {
     	Tablet tabletInstance = new Tablet(serviceFinderHost);
 		try {
-			ServerDetail obelixDetail = tabletInstance.getServerDetail(OBELIX_SERVER_NAME);
+			ServerDetail obelixDetail = tabletInstance.getServerDetails(OBELIX_SERVER_NAME);
 			RegistryService regService = new RegistryService();
 			System.setProperty(JAVA_RMI_HOSTNAME_PROPERTY, regService.getLocalIPAddress());
 			tabletInstance.setupTabletInstance(obelixDetail, regService);
