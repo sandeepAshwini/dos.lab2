@@ -3,32 +3,52 @@ package util;
 import java.io.Serializable;
 import java.util.HashMap;
 
-public class VectorOrdered implements Serializable {
+public class VectorClock implements Serializable {
 	private static final long serialVersionUID = 910351590403500446L;
 	private HashMap<Integer, Long> timeVector;
 	private Integer PID;
+	private static long SLEEP_TIME = 100;
 
-	public VectorOrdered(int PID) {
+	public VectorClock(int PID) {
 		this.timeVector = new HashMap<Integer, Long>();
 		this.PID = PID;
 	}
 
-	public void synchronizeVector(VectorOrdered incomingVector) {
-		for (Integer PID : this.timeVector.keySet()) {
-			if (PID == this.PID) {
+	public void synchronizeVector(int callerID, VectorClock incomingVector) {
+		/*
+		 * while (!causalConditionsSatisfied(callerID, incomingVector)) { try {
+		 * Thread.sleep(SLEEP_TIME); } catch (InterruptedException e) {
+		 * e.printStackTrace(); } }
+		 */
+		for (Integer id : this.timeVector.keySet()) {
+			if (id == this.PID) {
 				continue;
 			} else {
-				this.updateValue(PID, incomingVector.getValue(PID));
+				this.updateValue(id, Math.max(this.getValue(id),
+						incomingVector.getValue(id)));
 			}
 		}
 	}
 
-	public Long getValue(int PID) {
-		return this.timeVector.get(PID);
+	private boolean causalConditionsSatisfied(int callerID,
+			VectorClock incomingVector) {
+		if (incomingVector.getValue(callerID) == this.timeVector.get(callerID) + 1) {
+			for (Integer key : this.timeVector.keySet()) {
+				if (this.timeVector.get(key) < incomingVector.getValue(key)) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
 	}
 
-	public void updateValue(int PID, long value) {
-		this.timeVector.put(PID, value);
+	public Long getValue(int id) {
+		return this.timeVector.get(id);
+	}
+
+	public void updateValue(int id, long value) {
+		this.timeVector.put(id, value);
 	}
 
 	public void incrementMyTime() {

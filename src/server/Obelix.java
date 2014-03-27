@@ -18,7 +18,7 @@ import util.BullyElectedBerkeleySynchronized;
 import util.Lottery;
 import util.RegistryService;
 import util.ServerDetail;
-import util.VectorOrdered;
+import util.VectorClock;
 import base.Athlete;
 import base.Event;
 import base.EventCategories;
@@ -60,7 +60,10 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 	private static String SERVICE_FINDER_HOST;
 	private OrgetorixInterface orgetorixStub;
 	private static Lottery lottery = new Lottery();
-
+	
+	
+	private static Integer requestCounter = 0;
+	
 	public Obelix(String serviceFinderHost) {
 		super(OBELIX_SERVICE_NAME, serviceFinderHost);
 		this.completedEvents = new HashSet<Event>();
@@ -102,7 +105,7 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 	 */
 	public void updateResultsAndTallies(Event simulatedEvent)
 			throws RemoteException {
-		System.err.println("Received updateResultsAndTallies msg.");
+		//System.err.println("Received updateResultsAndTallies msg.");
 		orgetorixStub.updateResultsAndTallies(simulatedEvent);
 
 	}
@@ -115,7 +118,7 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 	 */
 	public void updateCurrentScores(EventCategories eventName,
 			List<Athlete> currentScores) throws RemoteException {
-		System.err.println("Received updateCurrentScores msg.");
+		//System.err.println("Received updateCurrentScores msg.");
 		pushCurrentScores(eventName, currentScores);
 		orgetorixStub.updateCurrentScores(eventName, currentScores);
 	}
@@ -128,7 +131,7 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 	 */
 	private void pushCurrentScores(final EventCategories eventName,
 			final List<Athlete> currentScores) throws RemoteException {
-		System.err.println("Pushing current scores.");
+		//System.err.println("Pushing current scores.");
 		Thread scoreThread = new Thread(new Runnable() {
 
 			@Override
@@ -145,7 +148,7 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 	 * @param completedEvent
 	 */
 	private void pushResults(final Event completedEvent) {
-		System.err.println("Pushing results.");
+		//System.err.println("Pushing results.");
 		Thread resultThread = new Thread(new Runnable() {
 
 			@Override
@@ -162,8 +165,9 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 	 * completed event.
 	 */
 	public Results getResults(EventCategories eventName, String clientID) {
-		System.err.println("Sending results for " + eventName + ".");
+		//System.err.println("Sending results for " + eventName + ".");
 		try {
+			this.test(clientID);
 			this.notifyEvent(clientID);
 			Results result = orgetorixStub.getResults(eventName);
 			return result;
@@ -172,15 +176,26 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 		}
 
 	}
-
+	
+	private void test(String clientID){
+		synchronized(requestCounter){
+			requestCounter++;
+			if(requestCounter%Lottery.lotteryEnterFrequency == 0){
+				System.out.println("Entered into lottery = " + clientID);
+			}
+		}
+		
+	}
+	
 	/**
 	 * Remote function that can be called by clients to get the current scores
 	 * of an on going event.
 	 */
 	public List<Athlete> getCurrentScores(EventCategories eventName,
 			String clientID) throws RemoteException {
-		System.err.println("Sending current scores for " + eventName + ".");
+		//System.err.println("Sending current scores for " + eventName + ".");
 		try {
+			this.test(clientID);
 			this.notifyEvent(clientID);
 			return orgetorixStub.getCurrentScores(eventName);
 		} catch (RemoteException r) {
@@ -194,8 +209,9 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 	 * particular team.
 	 */
 	public Tally getMedalTally(NationCategories teamName, String clientID) {
-		System.err.println("Sending medal tally for " + teamName + ".");
+		//System.err.println("Sending medal tally for " + teamName + ".");
 		try {
+			this.test(clientID);
 			this.notifyEvent(clientID);
 			return orgetorixStub.getMedalTally(teamName);
 		} catch (RemoteException r) {
@@ -209,7 +225,7 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 	 */
 	public void registerClient(String clientID, String clientHost,
 			EventCategories eventName) {
-		System.err.println("Registering client " + clientID + ".");
+		//System.err.println("Registering client " + clientID + ".");
 		Subscription subscription = null;
 
 		synchronized (this.subscriptionMap) {
@@ -391,7 +407,7 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 		this.syncServers();
 		if (this.timeStamp.getCurrentTimeStamp()
 				% Lottery.lotteryEnterFrequency == 0) {
-			System.err.println("Entering " + participantID + " into lottery.");
+			System.out.println("Entering " + participantID + " into lottery.");
 			synchronized (lottery) {
 				lottery.addParticipant(participantID);
 			}
@@ -400,10 +416,18 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 
 	private void syncServers() throws RemoteException {
 		List<ServerDetail> participants = findAllParticipants(OBELIX_SERVICE_NAME);
+		List<VectorClock> vectorClocks = new ArrayList<VectorClock>();
 		for (ServerDetail participant : participants) {
+			if(participant.getPID()==this.PID){
+				continue;
+			}
 			BullyElectable clientStub = getBullyElectableClientStub(participant);
-			clientStub.notifyTimeStamp(this.timeStamp);
+			vectorClocks.add(clientStub.notifyTimeStamp(this.timeStamp));
 		}
+		for(VectorClock vectorClock:vectorClocks){
+			this.timeStamp.synchronizeVector(this.PID, vectorClock);
+		}
+		
 
 	}
 
@@ -411,8 +435,8 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 		return lottery.conductDraw();
 	}
 
-	public void notifyTimeStamp(VectorOrdered timeStamp) throws RemoteException {
-		super.notifyTimestamp(timeStamp);
+	public VectorClock notifyTimeStamp(VectorClock timeStamp) throws RemoteException {
+		return super.notifyTimestamp(this.PID, timeStamp);
 	}
 
 }

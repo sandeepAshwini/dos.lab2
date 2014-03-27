@@ -19,7 +19,7 @@ import java.util.UUID;
 
 import util.BullyElectedBerkeleySynchronized;
 import util.RegistryService;
-import util.VectorOrdered;
+import util.VectorClock;
 import base.Athlete;
 import base.Event;
 import base.EventCategories;
@@ -235,8 +235,8 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 		}
 	}
 
-	public void notifyTimeStamp(VectorOrdered timeStamp) throws RemoteException {
-		super.notifyTimestamp(timeStamp);
+	public VectorClock notifyTimeStamp(VectorClock timeStamp) throws RemoteException {
+		return super.notifyTimestamp(this.PID, timeStamp);
 	}
 
 }

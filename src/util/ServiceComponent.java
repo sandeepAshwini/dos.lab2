@@ -55,7 +55,7 @@ public abstract class ServiceComponent {
 		}
 	}
 	
-	protected String getServerName() {
+	public String getServerName() {
 		return this.serviceName + this.PID;
 	}
 

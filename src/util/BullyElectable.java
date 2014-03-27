@@ -10,5 +10,5 @@ public interface BullyElectable extends Remote {
 
 	public void notifyVictory(String callerServerName) throws RemoteException;
 
-	public void notifyTimeStamp(VectorOrdered timeStamp) throws RemoteException;
+	public VectorClock notifyTimeStamp(VectorClock timeStamp) throws RemoteException;
 }

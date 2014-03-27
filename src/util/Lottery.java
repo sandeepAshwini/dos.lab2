@@ -24,11 +24,6 @@ public class Lottery implements Serializable {
 		synchronized (this.drawCompleted) {
 			if (!this.drawCompleted) {
 				System.out.println("Conducting lottery.");
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
 				this.drawCompleted = true;
 				Random random = new Random();
 				if (this.participants.size() == 0) {
