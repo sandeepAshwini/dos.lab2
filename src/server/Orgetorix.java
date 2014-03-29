@@ -19,7 +19,6 @@ import java.util.UUID;
 
 import util.BullyElectedBerkeleySynchronized;
 import util.RegistryService;
-import util.VectorClock;
 import base.Athlete;
 import base.Event;
 import base.EventCategories;
@@ -156,7 +155,7 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 
 		writeToDatabase(scores, this.scoreFileName);
 	}
-
+	
 	/**
 	 * Retreives the medal tally for a specific team name from the database.
 	 * 
@@ -277,6 +276,8 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 		}
 		return Orgetorix.orgetorixServerInstance;
 	}
+	
+	public void addParticipant(String participantID) throws RemoteException {}
 
 	/**
 	 * Sets up the Orgetorix server stub and registers itself with

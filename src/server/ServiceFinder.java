@@ -94,7 +94,9 @@ public class ServiceFinder implements ServiceFinderInterface {
 	@Override
 	public void registerService(String serviceName, int PID, String address)
 			throws RemoteException {
-		this.services.add(new ServerDetail(serviceName, PID, address));
+		synchronized(this.services) {
+			this.services.add(new ServerDetail(serviceName, PID, address));
+		}
 	}
 
 	/**
@@ -108,7 +110,9 @@ public class ServiceFinder implements ServiceFinderInterface {
 	@Override
 	public ServerDetail getService(String serviceName) throws RemoteException {
 		List<ServerDetail> matchingServices = getServices(serviceName);
-		return matchingServices.get(random.nextInt(matchingServices.size()));
+		int num = random.nextInt(matchingServices.size());
+		System.out.println(num);
+		return matchingServices.get(num);
 	}
 
 	/**
@@ -120,9 +124,11 @@ public class ServiceFinder implements ServiceFinderInterface {
 	public List<ServerDetail> getServices(String serviceName)
 			throws RemoteException {
 		List<ServerDetail> matchingServices = new ArrayList<ServerDetail>();
-		for (ServerDetail curServerDetail : this.services) {
-			if (curServerDetail.getServiceName().equals(serviceName)) {
-				matchingServices.add(curServerDetail);
+		synchronized(this.services) {
+			for (ServerDetail curServerDetail : this.services) {
+				if (curServerDetail.getServiceName().equals(serviceName)) {
+					matchingServices.add(curServerDetail);
+				}
 			}
 		}
 		return matchingServices;

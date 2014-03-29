@@ -17,7 +17,8 @@ public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 		implements BullyElectable, BerkeleySynchronizable {
 
 	public long clockOffset = 0;
-	protected VectorClock timeStamp;
+	// protected VectorClock timeStamp;
+	protected LamportClock timeStamp;
 	private String timeServerName;
 	private static String[] serviceNames = { "Obelix", "Orgetorix" };
 	private static int JAVA_RMI_PORT = 1099;
@@ -27,7 +28,8 @@ public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 	public BullyElectedBerkeleySynchronized(String serviceName,
 			String serviceFinderHost) {
 		super(serviceName, serviceFinderHost);
-		this.timeStamp = new VectorClock(this.PID);
+		// this.timeStamp = new VectorClock(this.PID);
+		this.timeStamp = new LamportClock();
 	}
 
 	public void initiateElection() {
@@ -217,21 +219,6 @@ public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 	public boolean isElectedTimeServer() {
 		return this.timeServerName.equals(this.getServerName());
 	}
-
-	/**
-	 * Multicasts the current timestamp to other processes.
-	 * 
-	 * @return Updated timestamp of the current process.
-	 */
-	@Override
-	public VectorClock notifyTimestamp(Integer callerID,
-			VectorClock incomingTimeVector) throws RemoteException {
-		synchronized (this.timeStamp) {
-			this.timeStamp.synchronizeVector(callerID, incomingTimeVector);
-			return this.timeStamp;
-		}
-	}
-
 }
 
 /**

@@ -3,8 +3,10 @@ package sim;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.List;
 import java.util.Random;
 
+import util.BullyElectableFrontend;
 import base.EventCategories;
 import base.NationCategories;
 import base.OlympicException;
@@ -19,19 +21,19 @@ import client.Tablet;
  */
 public class TabletTester implements Runnable {
 
-	private static Integer requestCounter = 0;
-
 	private Tablet tabletInstance;
 	private static Random rand = new Random();
 	private int numRequests;
 	private static int counter = 0;
 	private static int ALL_REQUESTS = 4;
 	private static int CLIENT_PULL_REQUESTS_ONLY = 3;
+	private static String OBELIX_SERVICE_NAME = "Obelix";
+	private static Boolean PRINTED_STATISTICS = false;
 
 	// Simulation parameters
 	private static int SLEEP_INTERVAL = 1000;
-	private static int MIN_REQUESTS = 100;
-	private static int RANGE = 200;
+	private static int MIN_REQUESTS = 20;
+	private static int RANGE = 30;
 	private boolean allowServerPush = false;
 
 	/**
@@ -86,14 +88,6 @@ public class TabletTester implements Runnable {
 					requestNumber = rand.nextInt(ALL_REQUESTS);
 				}
 
-				synchronized (requestCounter) {
-					requestCounter++;
-					if (requestCounter % 100 == 0) {
-						System.out.println(this.tabletInstance.getServerName());
-					}
-					
-				}
-
 				switch (requestNumber) {
 				case 0:
 					this.tabletInstance.getResults(this.getEventType());
@@ -110,7 +104,21 @@ public class TabletTester implements Runnable {
 				}
 				Thread.sleep(SLEEP_INTERVAL);
 			}
-
+			
+			synchronized (PRINTED_STATISTICS) {
+				if(!PRINTED_STATISTICS) {
+					PRINTED_STATISTICS = true;
+					BullyElectableFrontend obelixFrontendStub = TabletSimulator
+							.getObelixFrontendClientStub();
+					List<Double> loadFactors = obelixFrontendStub.getLoadStatistics();
+					int serviceCounter = 1;
+					for (Double load : loadFactors) {
+						System.out.println(OBELIX_SERVICE_NAME + (serviceCounter++)
+								+ " load: " + load);
+					}
+				}
+			}
+			
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		} catch (InterruptedException e) {
@@ -118,6 +126,7 @@ public class TabletTester implements Runnable {
 		} catch (OlympicException e) {
 			e.printStackTrace();
 		}
+		
 		long endTime = System.currentTimeMillis();
 		System.out.println("Average latency : "
 				+ (endTime - startTime - SLEEP_INTERVAL * numRequests)

@@ -34,17 +34,18 @@ import base.Tally;
  */
 
 public class Tablet extends ServiceComponent implements TabletInterface {
-	//A local copy of the medal tallies.
+	// A local copy of the medal tallies.
 	private Map<NationCategories, Tally> medalTallies;
 	
-	//Writer used to write to files instead of the console.
+	// Writer used to write to files instead of the console.
     private FileWriter writer = null;
-    
-    private int PID;
     
     private static String JAVA_RMI_HOSTNAME_PROPERTY = "java.rmi.server.hostname";
     private static int JAVA_RMI_PORT = 1099;
     private static String SERVICE_FINDER_HOST;
+    
+    // Used only to test lamport clock synchronization.
+    public static boolean pollTally = true;
 
 	public Tablet(String serviceFinderHost) {
 		super(CLIENT_BASE_NAME + UUID.randomUUID().toString(), serviceFinderHost);
@@ -117,7 +118,9 @@ public class Tablet extends ServiceComponent implements TabletInterface {
 		} catch (IOException e) {
 			throw new OlympicException("Registry could not be created.", e);
 		}
-		tabletInstance.setupTallyUpdateThread();
+		if(pollTally) {
+			tabletInstance.setupTallyUpdateThread();
+		}		
 		return tabletInstance;
     }
     
@@ -299,7 +302,7 @@ public class Tablet extends ServiceComponent implements TabletInterface {
      * @throws RemoteException
      */
     public void updateMedalTallies() throws RemoteException {
-    	synchronized(medalTallies) {
+    	synchronized(this.medalTallies) {
     		for(NationCategories nation : NationCategories.values()) {
     			this.medalTallies.put(nation, this.obelixStub.getMedalTally(nation, this.getServerName()));
     		}
