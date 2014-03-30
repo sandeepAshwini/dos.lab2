@@ -37,5 +37,5 @@ public interface ObelixInterface extends Remote {
 			EventCategories eventName) throws RemoteException;
 
 	public String conductLottery() throws RemoteException;
-	
+
 }

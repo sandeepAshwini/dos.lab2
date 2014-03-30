@@ -20,21 +20,24 @@ public abstract class ServiceComponent {
 	private static Random random;
 	private ServiceFinderInterface serviceFinderStub;
 	private String serviceFinderHost;
+	private int serviceFinderPort;
 	protected int PID;
 	protected String serviceName;
 
 	private static String SERVICE_FINDER_NAME = "ServiceFinder";
-	private static int JAVA_RMI_PORT = 1099;
+	protected static int JAVA_RMI_PORT;
+	protected static int DEFAULT_JAVA_RMI_PORT = 1099;
 
 	public ServiceComponent() {
 		random = new Random();
 		this.PID = Math.abs(random.nextInt());
 	}
 
-	public ServiceComponent(String serviceName, String serviceFinderHost) {
+	public ServiceComponent(String serviceName, String serviceFinderHost,
+			int serviceFinderPort) {
 		this.serviceName = serviceName;
 		try {
-			setServiceFinderHost(serviceFinderHost);
+			setServiceFinderAddress(serviceFinderHost, serviceFinderPort);
 		} catch (OlympicException e) {
 			e.printStackTrace();
 		}
@@ -48,8 +51,9 @@ public abstract class ServiceComponent {
 	 * @param serviceFinderHost
 	 * @throws OlympicException
 	 */
-	public void setServiceFinderHost(String serviceFinderHost)
-			throws OlympicException {
+	public void setServiceFinderAddress(String serviceFinderHost,
+			int serviceFinderPort) throws OlympicException {
+		this.serviceFinderPort = serviceFinderPort;
 		this.serviceFinderHost = serviceFinderHost;
 		setupServiceFinderStub();
 	}
@@ -64,7 +68,7 @@ public abstract class ServiceComponent {
 		Registry registry = null;
 		try {
 			registry = LocateRegistry.getRegistry(serviceFinderHost,
-					JAVA_RMI_PORT);
+					serviceFinderPort);
 			ServiceFinderInterface serviceFinderStub = (ServiceFinderInterface) registry
 					.lookup(SERVICE_FINDER_NAME);
 			this.serviceFinderStub = serviceFinderStub;
@@ -87,9 +91,9 @@ public abstract class ServiceComponent {
 	 * @param address
 	 * @throws RemoteException
 	 */
-	public void register(String serviceName, String address)
+	public void register(String serviceName, String address, int rmiPort)
 			throws RemoteException {
-		serviceFinderStub.registerService(serviceName, PID, address);
+		serviceFinderStub.registerService(serviceName, PID, address, rmiPort);
 	}
 
 	/**

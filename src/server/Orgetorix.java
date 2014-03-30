@@ -39,10 +39,10 @@ import base.Tally;
 public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 		OrgetorixInterface {
 	private static String JAVA_RMI_HOSTNAME_PROPERTY = "java.rmi.server.hostname";
-	private static int JAVA_RMI_PORT = 1099;
 	private static String FILE_LOCATION = "./";
 	private static String ORGETORIX_SERVICE_NAME = "Orgetorix";
 	private static String SERVICE_FINDER_HOST;
+	private static int SERVICE_FINDER_PORT;
 
 	private static Orgetorix orgetorixServerInstance;
 	private String resultFileName;
@@ -50,8 +50,8 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 	private String scoreFileName;
 	private String dbName;
 
-	public Orgetorix(String serviceFinderHost) {
-		super(ORGETORIX_SERVICE_NAME, serviceFinderHost);
+	public Orgetorix(String serviceFinderHost, int serviceFinderPort) {
+		super(ORGETORIX_SERVICE_NAME, serviceFinderHost, serviceFinderPort);
 		this.dbName = UUID.randomUUID().toString();
 		this.resultFileName = FILE_LOCATION + "Results" + this.dbName;
 		this.tallyFileName = FILE_LOCATION + "Tallies" + this.dbName;
@@ -155,7 +155,7 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 
 		writeToDatabase(scores, this.scoreFileName);
 	}
-	
+
 	/**
 	 * Retreives the medal tally for a specific team name from the database.
 	 * 
@@ -263,7 +263,7 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 		} catch (IOException i) {
 			i.printStackTrace();
 		} catch (ClassNotFoundException c) {
-			System.out.println("Employee class not found");
+			System.out.println("Class not found");
 			c.printStackTrace();
 		}
 		return object;
@@ -272,12 +272,13 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 	private static Orgetorix getOrgetorixInstance() {
 		if (Orgetorix.orgetorixServerInstance == null) {
 			Orgetorix.orgetorixServerInstance = new Orgetorix(
-					Orgetorix.SERVICE_FINDER_HOST);
+					SERVICE_FINDER_HOST, SERVICE_FINDER_PORT);
 		}
 		return Orgetorix.orgetorixServerInstance;
 	}
-	
-	public void addParticipant(String participantID) throws RemoteException {}
+
+	public void addParticipant(String participantID) throws RemoteException {
+	}
 
 	/**
 	 * Sets up the Orgetorix server stub and registers itself with
@@ -291,17 +292,19 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 			throws IOException, OlympicException {
 		Registry registry = null;
 
-		this.register(ORGETORIX_SERVICE_NAME, regService.getLocalIPAddress());
+		this.register(ORGETORIX_SERVICE_NAME, regService.getLocalIPAddress(),
+				JAVA_RMI_PORT);
 		OrgetorixInterface serverStub = (OrgetorixInterface) UnicastRemoteObject
 				.exportObject(Orgetorix.getOrgetorixInstance(), 0);
 		try {
 			registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
 			registry.rebind(this.getServerName(), serverStub);
 			System.err.println("Registry Service running at "
-					+ regService.getLocalIPAddress() + ".");
+					+ regService.getLocalIPAddress() + ":" + JAVA_RMI_PORT
+					+ ".");
 			System.err.println("Orgetorix ready.");
 		} catch (RemoteException e) {
-			regService.setupLocalRegistry();
+			regService.setupLocalRegistry(JAVA_RMI_PORT);
 			registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
 			registry.rebind(this.getServerName(), serverStub);
 			System.err
@@ -310,7 +313,11 @@ public class Orgetorix extends BullyElectedBerkeleySynchronized implements
 	}
 
 	public static void main(String[] args) throws OlympicException {
-		Orgetorix.SERVICE_FINDER_HOST = (args.length < 1) ? null : args[0];
+		SERVICE_FINDER_HOST = (args.length < 1) ? null : args[0];
+		SERVICE_FINDER_PORT = (args.length < 2) ? DEFAULT_JAVA_RMI_PORT
+				: Integer.parseInt(args[1]);
+		JAVA_RMI_PORT = (args.length < 3) ? DEFAULT_JAVA_RMI_PORT : Integer
+				.parseInt(args[2]);
 		Orgetorix orgetorixInstance = Orgetorix.getOrgetorixInstance();
 
 		try {

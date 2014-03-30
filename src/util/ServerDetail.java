@@ -14,11 +14,14 @@ public class ServerDetail implements Serializable {
 	private String serviceName;
 	private int PID;
 	private String serviceAddress;
+	private int servicePort;
 
-	public ServerDetail(String serviceName, int PID, String serviceAddress) {
+	public ServerDetail(String serviceName, int PID, String serviceAddress,
+			int servicePort) {
 		this.serviceName = serviceName;
 		this.PID = PID;
 		this.serviceAddress = serviceAddress;
+		this.servicePort = servicePort;
 	}
 
 	public String getServiceName() {
@@ -47,5 +50,13 @@ public class ServerDetail implements Serializable {
 
 	public String getServerName() {
 		return this.serviceName + this.PID;
+	}
+
+	public int getServicePort() {
+		return servicePort;
+	}
+
+	public void setServicePort(int servicePort) {
+		this.servicePort = servicePort;
 	}
 }

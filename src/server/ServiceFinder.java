@@ -24,7 +24,8 @@ public class ServiceFinder implements ServiceFinderInterface {
 	private static Random random;
 	private static ServiceFinder serviceFinderInstance;
 	private static String JAVA_RMI_HOSTNAME_PROPERTY = "java.rmi.server.hostname";
-	private static int JAVA_RMI_PORT = 1099;
+	private static int JAVA_RMI_PORT;
+	private static int DEFAULT_JAVA_RMI_PORT = 1099;
 
 	private List<ServerDetail> services = new ArrayList<ServerDetail>();
 
@@ -33,6 +34,8 @@ public class ServiceFinder implements ServiceFinderInterface {
 	}
 
 	public static void main(String[] args) throws OlympicException {
+		JAVA_RMI_PORT = (args.length < 1) ? DEFAULT_JAVA_RMI_PORT : Integer
+				.parseInt(args[0]);
 		ServiceFinder serviceFinderInstance = ServiceFinder
 				.getServiceFinderInstance();
 		try {
@@ -73,10 +76,11 @@ public class ServiceFinder implements ServiceFinderInterface {
 			registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
 			registry.rebind(SERVER_NAME, serverStub);
 			System.err.println("Registry Service running at "
-					+ regService.getLocalIPAddress() + ".");
+					+ regService.getLocalIPAddress() + ":" + JAVA_RMI_PORT
+					+ ".");
 			System.err.println("ServiceFinder ready.");
 		} catch (RemoteException e) {
-			regService.setupLocalRegistry();
+			regService.setupLocalRegistry(JAVA_RMI_PORT);
 			registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
 			registry.rebind(SERVER_NAME, serverStub);
 			System.err
@@ -92,10 +96,11 @@ public class ServiceFinder implements ServiceFinderInterface {
 	 * @param address
 	 */
 	@Override
-	public void registerService(String serviceName, int PID, String address)
-			throws RemoteException {
-		synchronized(this.services) {
-			this.services.add(new ServerDetail(serviceName, PID, address));
+	public void registerService(String serviceName, int PID, String address,
+			int rmiPort) throws RemoteException {
+		synchronized (this.services) {
+			this.services.add(new ServerDetail(serviceName, PID, address,
+					rmiPort));
 		}
 	}
 
@@ -111,7 +116,6 @@ public class ServiceFinder implements ServiceFinderInterface {
 	public ServerDetail getService(String serviceName) throws RemoteException {
 		List<ServerDetail> matchingServices = getServices(serviceName);
 		int num = random.nextInt(matchingServices.size());
-		System.out.println(num);
 		return matchingServices.get(num);
 	}
 
@@ -124,7 +128,7 @@ public class ServiceFinder implements ServiceFinderInterface {
 	public List<ServerDetail> getServices(String serviceName)
 			throws RemoteException {
 		List<ServerDetail> matchingServices = new ArrayList<ServerDetail>();
-		synchronized(this.services) {
+		synchronized (this.services) {
 			for (ServerDetail curServerDetail : this.services) {
 				if (curServerDetail.getServiceName().equals(serviceName)) {
 					matchingServices.add(curServerDetail);

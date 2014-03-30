@@ -6,7 +6,7 @@ import java.rmi.RemoteException;
 import java.util.List;
 import java.util.Random;
 
-import util.BullyElectableFrontend;
+import util.LotteryManager;
 import base.EventCategories;
 import base.NationCategories;
 import base.OlympicException;
@@ -104,21 +104,22 @@ public class TabletTester implements Runnable {
 				}
 				Thread.sleep(SLEEP_INTERVAL);
 			}
-			
+
 			synchronized (PRINTED_STATISTICS) {
-				if(!PRINTED_STATISTICS) {
+				if (!PRINTED_STATISTICS) {
 					PRINTED_STATISTICS = true;
-					BullyElectableFrontend obelixFrontendStub = TabletSimulator
+					LotteryManager obelixFrontendStub = TabletSimulator
 							.getObelixFrontendClientStub();
-					List<Double> loadFactors = obelixFrontendStub.getLoadStatistics();
+					List<Double> loadFactors = obelixFrontendStub
+							.getLoadStatistics();
 					int serviceCounter = 1;
 					for (Double load : loadFactors) {
-						System.out.println(OBELIX_SERVICE_NAME + (serviceCounter++)
-								+ " load: " + load);
+						System.out.println(OBELIX_SERVICE_NAME
+								+ (serviceCounter++) + " load: " + load);
 					}
 				}
 			}
-			
+
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		} catch (InterruptedException e) {
@@ -126,7 +127,7 @@ public class TabletTester implements Runnable {
 		} catch (OlympicException e) {
 			e.printStackTrace();
 		}
-		
+
 		long endTime = System.currentTimeMillis();
 		System.out.println("Average latency : "
 				+ (endTime - startTime - SLEEP_INTERVAL * numRequests)

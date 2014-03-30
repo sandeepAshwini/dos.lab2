@@ -19,8 +19,6 @@ import util.ServiceComponent;
 
 public class Games extends ServiceComponent {
 
-	private static int JAVA_RMI_PORT = 1099;
-
 	/**
 	 * Game attributes.
 	 */
@@ -90,10 +88,10 @@ public class Games extends ServiceComponent {
 	 * the other with a pre defined break between them. Scores of the current
 	 * event are updated every 5 seconds by sending a message to Cacophonix.
 	 * Once an event is completed, the Results and Medal Tallies are updated by
-	 * sending a message to Cacophonix. 
+	 * sending a message to Cacophonix.
 	 * 
-	 * At the end of the simulation it
-	 * initiates the lottery by sending a message to Cacophonix.
+	 * At the end of the simulation it initiates the lottery by sending a
+	 * message to Cacophonix.
 	 * 
 	 * @param args
 	 * @throws OlympicException
@@ -103,8 +101,12 @@ public class Games extends ServiceComponent {
 		long SLEEP_DURATION = (long) 5.1 * 1000;
 
 		String serviceFinderHost = (args.length < 1) ? null : args[0];
+		int serviceFinderPort = (args.length < 2) ? null : Integer
+				.parseInt(args[1]);
+		JAVA_RMI_PORT = (args.length < 3) ? DEFAULT_JAVA_RMI_PORT : Integer
+				.parseInt(args[2]);
 		Games game = new Games("Pompeii", "48 BC");
-		game.setServiceFinderHost(serviceFinderHost);
+		game.setServiceFinderAddress(serviceFinderHost, serviceFinderPort);
 		int numEvents = game.events.size();
 
 		game.printGameIntro();
@@ -112,7 +114,8 @@ public class Games extends ServiceComponent {
 			ServerDetail cacophonixDetail = game
 					.getServerDetails(CACOPHONIX_SERVICE_NAME);
 			Registry registry = LocateRegistry.getRegistry(
-					cacophonixDetail.getServiceAddress(), JAVA_RMI_PORT);
+					cacophonixDetail.getServiceAddress(),
+					cacophonixDetail.getServicePort());
 			final CacophonixInterface stub = (CacophonixInterface) registry
 					.lookup(cacophonixDetail.getServerName());
 			for (int i = 0; i < numEvents; i++) {

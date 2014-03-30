@@ -10,7 +10,7 @@ import java.util.List;
 
 import server.ServiceFinder;
 import server.ServiceFinderInterface;
-import util.BullyElectableFrontend;
+import util.LotteryManager;
 import util.ServerDetail;
 import base.EventCategories;
 import base.OlympicException;
@@ -26,7 +26,8 @@ public class TabletSimulator {
 
 	private static int DEFAULT_TABLET_LIMIT = 10;
 	private static int PROCESS_ORDERING_TABLET_LIMIT = 10;
-	private static int JAVA_RMI_PORT = 1099;
+	private static int JAVA_RMI_PORT;
+	private static int DEFAULT_JAVA_RMI_PORT = 1099;
 	private static String SERVICE_FINDER_NAME = "ServiceFinder";
 	private static String OBELIX_SERVICE_NAME = "Obelix";
 	private static ServiceFinderInterface serviceFinderStub;
@@ -40,10 +41,12 @@ public class TabletSimulator {
 	 * @throws OlympicException
 	 */
 	private static List<Tablet> createTablets(int numberOfTablets,
-			String serviceFinderHost) throws OlympicException {
+			String serviceFinderHost, int serviceFinderPort)
+			throws OlympicException {
 		List<Tablet> tablets = new ArrayList<Tablet>();
 		for (int i = 0; i < numberOfTablets; i++) {
-			tablets.add(Tablet.deployTablet(serviceFinderHost));
+			tablets.add(Tablet.deployTablet(serviceFinderHost,
+					serviceFinderPort, JAVA_RMI_PORT));
 		}
 		return tablets;
 	}
@@ -83,7 +86,7 @@ public class TabletSimulator {
 	private static void testProcessOrdering(List<Tablet> tablets)
 			throws RemoteException, InterruptedException {
 		Tablet.pollTally = false;
-		BullyElectableFrontend clientStub = getObelixFrontendClientStub();
+		LotteryManager clientStub = getObelixFrontendClientStub();
 		clientStub.setLotteryEnterFrequency(PROCESS_ORDERING_TABLET_LIMIT);
 		System.out.println(tablets.size());
 		System.out.println("Tablet "
@@ -98,51 +101,53 @@ public class TabletSimulator {
 		}
 		Tablet.pollTally = true;
 	}
-	
-	public static BullyElectableFrontend getObelixFrontendClientStub() throws RemoteException {
-		ServerDetail obelixDetail = serviceFinderStub.getService(OBELIX_SERVICE_NAME);
-		return getBullyElectableFrontendClientStub(obelixDetail);
+
+	public static LotteryManager getObelixFrontendClientStub()
+			throws RemoteException {
+		ServerDetail obelixDetail = serviceFinderStub
+				.getService(OBELIX_SERVICE_NAME);
+		return getLotteryManagerClientStub(obelixDetail);
 	}
-	
+
 	/**
 	 * Sets up a client stub of type BullyElectableFrontend.
 	 * 
 	 * @param participant
 	 * @throws RemoteException
 	 */
-	private static BullyElectableFrontend getBullyElectableFrontendClientStub(
+	private static LotteryManager getLotteryManagerClientStub(
 			ServerDetail participant) throws RemoteException {
 		Registry registry = null;
-		BullyElectableFrontend client = null;
+		LotteryManager client = null;
 		registry = LocateRegistry.getRegistry(participant.getServiceAddress(),
-				JAVA_RMI_PORT);
+				participant.getServicePort());
 		try {
-			client = (BullyElectableFrontend) registry.lookup(participant
+			client = (LotteryManager) registry.lookup(participant
 					.getServerName());
 		} catch (NotBoundException e) {
 			e.printStackTrace();
 		}
 		return client;
 	}
-	
+
 	/**
 	 * Sets up the {@link ServiceFinder} client stub used to register and lookup
 	 * services.
 	 * 
 	 * @throws OlympicException
 	 */
-	private static void setupServiceFinderStub(String serviceFinderHost) throws OlympicException {
+	private static void setupServiceFinderStub(String serviceFinderHost,
+			int serviceFinderPort) throws OlympicException {
 		Registry registry = null;
 		try {
 			registry = LocateRegistry.getRegistry(serviceFinderHost,
-					JAVA_RMI_PORT);
+					serviceFinderPort);
 			TabletSimulator.serviceFinderStub = (ServiceFinderInterface) registry
 					.lookup(SERVICE_FINDER_NAME);
 		} catch (Exception e) {
 			throw new OlympicException("Could not set up Service Finder Stub.");
 		}
 	}
-
 
 	/**
 	 * @param args
@@ -153,13 +158,18 @@ public class TabletSimulator {
 	public static void main(String[] args) throws OlympicException,
 			IOException, NotBoundException {
 		String serviceFinderHost = (args.length < 1) ? null : args[0];
-		setupServiceFinderStub(serviceFinderHost);
-		int numTablets = (args.length < 2) ? DEFAULT_TABLET_LIMIT : Integer
-				.parseInt(args[1]);
-		List<Tablet> tablets = createTablets(numTablets, serviceFinderHost);
+		int serviceFinderPort = (args.length < 2) ? DEFAULT_JAVA_RMI_PORT
+				: Integer.parseInt(args[1]);
+		JAVA_RMI_PORT = (args.length < 3) ? DEFAULT_JAVA_RMI_PORT : Integer
+				.parseInt(args[2]);
+		setupServiceFinderStub(serviceFinderHost, serviceFinderPort);
+		int numTablets = (args.length < 4) ? DEFAULT_TABLET_LIMIT : Integer
+				.parseInt(args[3]);
+		List<Tablet> tablets = createTablets(numTablets, serviceFinderHost,
+				serviceFinderPort);
 		try {
-//			testProcessOrdering(tablets.subList(0,
-//					PROCESS_ORDERING_TABLET_LIMIT));
+			// testProcessOrdering(tablets.subList(0,
+			// PROCESS_ORDERING_TABLET_LIMIT));
 			testTablets(tablets);
 		} catch (InterruptedException e) {
 			e.printStackTrace();

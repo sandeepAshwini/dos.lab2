@@ -21,13 +21,12 @@ public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 	protected LamportClock timeStamp;
 	private String timeServerName;
 	private static String[] serviceNames = { "Obelix", "Orgetorix" };
-	private static int JAVA_RMI_PORT = 1099;
 	private volatile boolean electionEnded = false;
 	private static int INITIATOR_ID = -1;
 
 	public BullyElectedBerkeleySynchronized(String serviceName,
-			String serviceFinderHost) {
-		super(serviceName, serviceFinderHost);
+			String serviceFinderHost, int serviceFinderPort) {
+		super(serviceName, serviceFinderHost, serviceFinderPort);
 		// this.timeStamp = new VectorClock(this.PID);
 		this.timeStamp = new LamportClock();
 	}
@@ -51,7 +50,7 @@ public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 		Registry registry = null;
 		BullyElectable client = null;
 		registry = LocateRegistry.getRegistry(participant.getServiceAddress(),
-				JAVA_RMI_PORT);
+				participant.getServicePort());
 		try {
 			client = (BullyElectable) registry.lookup(participant
 					.getServerName());
@@ -72,7 +71,7 @@ public abstract class BullyElectedBerkeleySynchronized extends ServiceComponent
 		Registry registry = null;
 		BerkeleySynchronizable client = null;
 		registry = LocateRegistry.getRegistry(participant.getServiceAddress(),
-				JAVA_RMI_PORT);
+				participant.getServicePort());
 		try {
 			client = (BerkeleySynchronizable) registry.lookup(participant
 					.getServerName());
