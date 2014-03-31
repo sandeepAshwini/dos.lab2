@@ -116,7 +116,9 @@ public class ServiceFinder implements ServiceFinderInterface {
 	public ServerDetail getService(String serviceName) throws RemoteException {
 		List<ServerDetail> matchingServices = getServices(serviceName);
 		int num = random.nextInt(matchingServices.size());
-		return matchingServices.get(num);
+		ServerDetail pickedService = matchingServices.get(num);
+		System.out.println("Resolved " + serviceName + " to " + pickedService.getServerName() + ".");
+		return pickedService;
 	}
 
 	/**

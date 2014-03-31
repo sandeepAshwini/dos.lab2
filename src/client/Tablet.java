@@ -123,12 +123,10 @@ public class Tablet extends ServiceComponent implements TabletInterface {
 			int serviceFinderPort) throws OlympicException {
 		Tablet tabletInstance = new Tablet(serviceFinderHost, serviceFinderPort);
 		try {
-			ServerDetail obelixDetail = tabletInstance
-					.getServerDetails(OBELIX_SERVER_NAME);
 			RegistryService regService = new RegistryService();
 			System.setProperty(JAVA_RMI_HOSTNAME_PROPERTY,
 					regService.getLocalIPAddress());
-			tabletInstance.setupTabletInstance(obelixDetail, regService);
+			tabletInstance.setupTabletInstance(regService);
 		} catch (IOException e) {
 			throw new OlympicException("Registry could not be created.", e);
 		}
@@ -143,12 +141,10 @@ public class Tablet extends ServiceComponent implements TabletInterface {
 		JAVA_RMI_PORT = rmiPort;
 		Tablet tabletInstance = new Tablet(serviceFinderHost, serviceFinderPort);
 		try {
-			ServerDetail obelixDetail = tabletInstance
-					.getServerDetails(OBELIX_SERVER_NAME);
 			RegistryService regService = new RegistryService();
 			System.setProperty(JAVA_RMI_HOSTNAME_PROPERTY,
 					regService.getLocalIPAddress());
-			tabletInstance.setupTabletInstance(obelixDetail, regService);
+			tabletInstance.setupTabletInstance(regService);
 		} catch (IOException e) {
 			throw new OlympicException("Registry could not be created.", e);
 		}
@@ -205,11 +201,15 @@ public class Tablet extends ServiceComponent implements TabletInterface {
 	 * @return Tablet
 	 * @throws IOException
 	 */
-	private void setupTabletInstance(ServerDetail obelixDetail,
-			RegistryService regService) throws IOException, OlympicException {
+	private void setupTabletInstance(RegistryService regService) throws IOException, OlympicException {
+		this.setupObelixStub();
+		this.setupTabletServer(regService);
+	}
+	
+	private void setupObelixStub() throws RemoteException {
+		ServerDetail obelixDetail = this.getServerDetails(OBELIX_SERVER_NAME);
 		ObelixInterface obelixStub = connectToObelix(obelixDetail);
 		this.setObelixStub(obelixStub);
-		this.setupTabletServer(regService);
 	}
 
 	/**
@@ -330,6 +330,7 @@ public class Tablet extends ServiceComponent implements TabletInterface {
 	}
 
 	public void getResults(EventCategories eventType) throws RemoteException {
+		this.setupObelixStub();
 		Results result = obelixStub.getResults(eventType, this.getServerName());
 		if (result != null) {
 			this.printCurrentResult(eventType, result);
@@ -358,6 +359,7 @@ public class Tablet extends ServiceComponent implements TabletInterface {
 	}
 
 	public void getMedalTally(NationCategories nation) throws RemoteException {
+		this.setupObelixStub();
 		synchronized (this.medalTallies) {
 			Tally medalTally = this.medalTallies.get(nation);
 			this.printCurrentTally(nation, medalTally);
@@ -404,6 +406,7 @@ public class Tablet extends ServiceComponent implements TabletInterface {
 
 	public void getCurrentScore(EventCategories eventType)
 			throws RemoteException {
+		this.setupObelixStub();
 		List<Athlete> scores = this.obelixStub.getCurrentScores(eventType,
 				this.getServerName());
 		if (scores != null && scores.size() != 0) {
