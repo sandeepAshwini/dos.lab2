@@ -25,8 +25,8 @@ public class TabletTester implements Runnable {
 	private static Random rand = new Random();
 	private int numRequests;
 	private static int counter = 0;
-	private static int ALL_REQUESTS = 4;
-	private static int CLIENT_PULL_REQUESTS_ONLY = 3;
+	private static int ALL_REQUESTS = 5;
+	private static int CLIENT_PULL_REQUESTS_ONLY = 4;
 	private static String OBELIX_SERVICE_NAME = "Obelix";
 	private static Boolean PRINTED_STATISTICS = false;
 
@@ -99,6 +99,9 @@ public class TabletTester implements Runnable {
 					this.tabletInstance.getCurrentScore(this.getEventType());
 					break;
 				case 3:
+					this.tabletInstance.getLotteryWinner();
+					break;
+				case 4:
 					this.tabletInstance.subscribeTo(this.getEventType());
 					break;
 				}

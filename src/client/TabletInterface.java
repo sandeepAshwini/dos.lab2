@@ -20,4 +20,5 @@ public interface TabletInterface extends Remote {
 
 	public void updateResults(EventCategories eventName, Results result)
 			throws RemoteException;
+
 }

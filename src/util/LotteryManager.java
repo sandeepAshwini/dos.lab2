@@ -20,4 +20,6 @@ public interface LotteryManager extends BullyElectable {
 	public int getRequestCount() throws RemoteException;
 
 	public void freezeLottery() throws RemoteException;
+	
+	public void setLotteryWinner(String winnerID) throws RemoteException;
 }

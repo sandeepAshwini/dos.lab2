@@ -67,6 +67,8 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 	private boolean lotteryFrozen;
 	private Integer localRequestCounter = 0;
 
+	private String lotteryWinner;
+
 	public Obelix(String serviceFinderHost, int serviceFinderPort) {
 		super(OBELIX_SERVICE_NAME, serviceFinderHost, serviceFinderPort);
 		this.completedEvents = new HashSet<Event>();
@@ -75,6 +77,7 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 		this.subscriptionMap = new HashMap<EventCategories, Subscription>();
 		this.subscriberHostMap = new HashMap<String, String>();
 		this.lotteryFrozen = false;
+		this.lotteryWinner = null;
 
 		for (NationCategories nation : NationCategories.values()) {
 			this.medalTallies.put(nation, new Tally());
@@ -504,12 +507,18 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 	@Override
 	public String conductLottery() throws RemoteException {
 		List<ServerDetail> participants = findAllParticipants(OBELIX_SERVICE_NAME);
+		List<LotteryManager> clientStubs = new ArrayList<LotteryManager>();
 		for (ServerDetail participant : participants) {
 			LotteryManager clientStub = getLotteryManagerClientStub(participant);
 			clientStub.freezeLottery();
+			clientStubs.add(clientStub);
 		}
 		synchronized (this.lottery) {
-			return this.lottery.conductDraw();
+			String winner = this.lottery.conductDraw();
+			for (LotteryManager clientStub : clientStubs) {
+				clientStub.setLotteryWinner(winner);
+			}
+			return winner;
 		}
 	}
 
@@ -584,4 +593,21 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 	public void freezeLottery() throws RemoteException {
 		this.lotteryFrozen = true;
 	}
+
+	@Override
+	public void setLotteryWinner(String winnerID) throws RemoteException {
+		this.lotteryWinner = winnerID;
+	}
+
+	@Override
+	public String getLotteryWinner(String clientID) throws RemoteException {
+		System.err.println("Sending lottery winner information.");
+		notifyEvent(clientID);
+		if (this.lotteryWinner == null) {
+			return null;
+		} else {
+			return this.lotteryWinner;
+		}
+	}
+
 }

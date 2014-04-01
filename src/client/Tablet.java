@@ -163,9 +163,9 @@ public class Tablet extends ServiceComponent implements TabletInterface {
 		try {
 			while (true) {
 				// String menuLine =
-				// String.format("1. Get final results.\n2. Get medal tally.\n3. Get current score.\n4. Subscribe to updates.");
+				// String.format("1. Get final results.\n2. Get medal tally.\n3. Get current score.\n4. Get Lottery Winner.\n5. Subscribe to updates.");
 				String menuLine = String
-						.format("1. Get final results.\n2. Get medal tally.\n3. Get current score.");
+						.format("1. Get final results.\n2. Get medal tally.\n3. Get current score.\n4. Get Lottery Winner.");
 				this.printToConsole(menuLine, null, null);
 				int choice = Integer.parseInt(getInput("Enter choice."));
 				switch (choice) {
@@ -178,7 +178,10 @@ public class Tablet extends ServiceComponent implements TabletInterface {
 				case 3:
 					this.getCurrentScore();
 					break;
-				// case 4: this.subscribeTo();
+				case 4:
+					this.getLotteryWinner();
+					break;
+				// case 5: this.subscribeTo();
 				// this.waitToResume();
 				// this.resumeMenuLoop = false; break;
 				default:
@@ -201,11 +204,12 @@ public class Tablet extends ServiceComponent implements TabletInterface {
 	 * @return Tablet
 	 * @throws IOException
 	 */
-	private void setupTabletInstance(RegistryService regService) throws IOException, OlympicException {
+	private void setupTabletInstance(RegistryService regService)
+			throws IOException, OlympicException {
 		this.setupObelixStub();
 		this.setupTabletServer(regService);
 	}
-	
+
 	private void setupObelixStub() throws RemoteException {
 		ServerDetail obelixDetail = this.getServerDetails(OBELIX_SERVER_NAME);
 		ObelixInterface obelixStub = connectToObelix(obelixDetail);
@@ -419,6 +423,32 @@ public class Tablet extends ServiceComponent implements TabletInterface {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public void getLotteryWinner() throws RemoteException {
+		this.setupObelixStub();
+		String winner = this.obelixStub.getLotteryWinner(this.getServerName());
+		try {
+
+			if (winner != null) {
+				if (winner.equals(this.getServerName())) {
+					printToConsole(
+							"You are the lucky winner. Congratulations.", null,
+							null);
+
+				} else {
+					printToConsole("The lucky winner is " + winner + ".", null,
+							null);
+				}
+
+			} else {
+				printToConsole("Lottery Results are not yet available.", null,
+						null);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	/**

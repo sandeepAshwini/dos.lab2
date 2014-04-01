@@ -101,7 +101,7 @@ public class Games extends ServiceComponent {
 		long SLEEP_DURATION = (long) 5.1 * 1000;
 
 		String serviceFinderHost = (args.length < 1) ? null : args[0];
-		int serviceFinderPort = (args.length < 2) ? null : Integer
+		int serviceFinderPort = (args.length < 2) ? DEFAULT_JAVA_RMI_PORT : Integer
 				.parseInt(args[1]);
 		JAVA_RMI_PORT = (args.length < 3) ? DEFAULT_JAVA_RMI_PORT : Integer
 				.parseInt(args[2]);
