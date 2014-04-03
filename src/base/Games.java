@@ -155,6 +155,10 @@ public class Games extends ServiceComponent {
 	 * @param winner
 	 */
 	public static void printCongratulatoryMsg(String winner) {
+		if(winner == null){
+			System.out
+			.println("No participants in the lottery.");
+		}
 		System.out
 				.println(String
 						.format("Congratulations %s. You win a hunting trip for boars with Asterix, "
