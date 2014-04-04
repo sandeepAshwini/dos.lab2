@@ -132,8 +132,8 @@ public class Cacophonix extends ServiceComponent implements CacophonixInterface 
 					+ ".");
 			System.err.println("Cacophonix ready.");
 		} catch (RemoteException e) {
-			regService.setupLocalRegistry(JAVA_RMI_PORT);
-			registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
+			registry = regService.setupLocalRegistry(JAVA_RMI_PORT);
+//			registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
 			registry.rebind(this.getServerName(), serverStub);
 			System.err
 					.println("New Registry Service created. Cacophonix ready.");

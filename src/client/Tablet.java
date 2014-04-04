@@ -262,8 +262,8 @@ public class Tablet extends ServiceComponent implements TabletInterface {
 					+ ".");
 			System.err.println("Tablet ready.");
 		} catch (RemoteException e) {
-			regService.setupLocalRegistry(JAVA_RMI_PORT);
-			registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
+			registry = regService.setupLocalRegistry(JAVA_RMI_PORT);
+//			registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
 			registry.rebind(this.getServerName(), tabletStub);
 			System.err.println("New Registry Service created. Tablet ready");
 		}

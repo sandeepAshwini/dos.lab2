@@ -80,8 +80,8 @@ public class ServiceFinder implements ServiceFinderInterface {
 					+ ".");
 			System.err.println("ServiceFinder ready.");
 		} catch (RemoteException e) {
-			regService.setupLocalRegistry(JAVA_RMI_PORT);
-			registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
+			registry = regService.setupLocalRegistry(JAVA_RMI_PORT);
+//			registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
 			registry.rebind(SERVER_NAME, serverStub);
 			System.err
 					.println("New Registry Service created. ServiceFinder ready.");

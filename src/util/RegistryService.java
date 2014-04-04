@@ -5,6 +5,8 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.Enumeration;
 
 import base.OlympicException;
@@ -29,10 +31,11 @@ public class RegistryService {
 	 * 
 	 * @throws IOException
 	 */
-	private void startRegistryService(int rmiPort) throws IOException {
-		Runtime.getRuntime().exec(
-				new String[] { RMI_COMMAND, USE_CODEBASE_ONLY_FALSE,
-						(new Integer(rmiPort)).toString() });
+	private Registry startRegistryService(int rmiPort) throws IOException {
+		return LocateRegistry.createRegistry(rmiPort);
+		// Runtime.getRuntime().exec(
+		// new String[] { RMI_COMMAND, USE_CODEBASE_ONLY_FALSE,
+		// (new Integer(rmiPort)).toString() });
 	}
 
 	/**
@@ -66,10 +69,11 @@ public class RegistryService {
 	 * 
 	 * @throws OlympicException
 	 */
-	public void setupLocalRegistry(int rmiPort) throws OlympicException {
+	public Registry setupLocalRegistry(int rmiPort) throws OlympicException {
+		Registry newRegistry = null;
 		try {
 			String ipAddress = this.getLocalIPAddress();
-			this.startRegistryService(rmiPort);
+			newRegistry = this.startRegistryService(rmiPort);
 			System.err.println("Registry Service started at : " + ipAddress
 					+ ":" + rmiPort + ".");
 			Thread.sleep(PROPAGATION_INTERVAL);
@@ -79,5 +83,7 @@ public class RegistryService {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+
+		return newRegistry;
 	}
 }

@@ -374,8 +374,8 @@ public class Obelix extends BullyElectedBerkeleySynchronized implements
 					+ ".");
 			System.err.println("Obelix ready.");
 		} catch (RemoteException e) {
-			regService.setupLocalRegistry(JAVA_RMI_PORT);
-			registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
+			registry = regService.setupLocalRegistry(JAVA_RMI_PORT);
+//			registry = LocateRegistry.getRegistry(JAVA_RMI_PORT);
 			registry.rebind(this.getServerName(), serverStub);
 			System.err.println("New Registry Service created. Obelix ready.");
 		}
