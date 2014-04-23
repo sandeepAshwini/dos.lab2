@@ -1,0 +1,103 @@
+Registry Service running at 192.168.0.13.
+Obelix ready.
+Obelix93804255
+Orgetorix45975067
+Elected time server: Obelix93804255
+Sending notifyVictory msg to Orgetorix45975067.
+Sending getTime msg to Obelix93804255.
+Sending getTime msg to Orgetorix45975067.
+Sending setClockOffset msg to Obelix93804255. Clock offset: 2
+Sending setClockOffset msg to Orgetorix45975067. Clock offset: -1
+Elected time server: Obelix1817786036
+Entered into lottery = Client_a915e663-7665-4644-b171-8a2d5a471ade1501634013
+Entering Client_a915e663-7665-4644-b171-8a2d5a471ade1501634013 into lottery.
+Entered into lottery = Client_a915e663-7665-4644-b171-8a2d5a471ade1501634013
+Entering Client_a915e663-7665-4644-b171-8a2d5a471ade1501634013 into lottery.
+Entered into lottery = Client_a915e663-7665-4644-b171-8a2d5a471ade1501634013
+Entering Client_a915e663-7665-4644-b171-8a2d5a471ade1501634013 into lottery.
+Entered into lottery = Client_a915e663-7665-4644-b171-8a2d5a471ade1501634013
+Entering Client_a915e663-7665-4644-b171-8a2d5a471ade1501634013 into lottery.
+Entered into lottery = Client_e041b09b-5968-4d68-86e6-6d9d503246311383650328
+Entering Client_e041b09b-5968-4d68-86e6-6d9d503246311383650328 into lottery.
+Entered into lottery = Client_8037ee3b-869d-4beb-84ef-fda1530bdacc1891597296
+Entering Client_8037ee3b-869d-4beb-84ef-fda1530bdacc1891597296 into lottery.
+Entered into lottery = Client_e041b09b-5968-4d68-86e6-6d9d503246311383650328
+Entering Client_e041b09b-5968-4d68-86e6-6d9d503246311383650328 into lottery.
+Conducting lottery.
+Entered into lottery = Client_8037ee3b-869d-4beb-84ef-fda1530bdacc1891597296
+Entering Client_8037ee3b-869d-4beb-84ef-fda1530bdacc1891597296 into lottery.
+
+
+
+
+Registry Service running at 192.168.0.13.
+Obelix ready.
+Obelix93804255
+Obelix1817786036
+Orgetorix45975067
+Elected time server: Obelix1817786036
+Sending getTime msg to Obelix93804255.
+Sending notifyVictory msg to Obelix93804255.
+Sending notifyVictory msg to Orgetorix45975067.
+Sending getTime msg to Obelix1817786036.
+Sending getTime msg to Orgetorix45975067.
+Sending setClockOffset msg to Obelix93804255. Clock offset: 4
+Sending setClockOffset msg to Obelix1817786036. Clock offset: 1
+Sending setClockOffset msg to Orgetorix45975067. Clock offset: 0
+Entered into lottery = Client_8b8d53f2-7df7-43c5-a071-a936b78c74d6459259812
+Entering Client_8b8d53f2-7df7-43c5-a071-a936b78c74d6459259812 into lottery.
+Sending getTime msg to Obelix93804255.
+Sending getTime msg to Obelix1817786036.
+Sending getTime msg to Orgetorix45975067.
+Sending setClockOffset msg to Obelix93804255. Clock offset: 2
+Sending setClockOffset msg to Obelix1817786036. Clock offset: 1
+Sending setClockOffset msg to Orgetorix45975067. Clock offset: 0
+Entered into lottery = Client_8b8d53f2-7df7-43c5-a071-a936b78c74d6459259812
+Entering Client_8b8d53f2-7df7-43c5-a071-a936b78c74d6459259812 into lottery.
+Entered into lottery = Client_a2689892-71e8-40a6-93d3-e5c5c4c63845540108002
+Entering Client_a2689892-71e8-40a6-93d3-e5c5c4c63845540108002 into lottery.
+Entered into lottery = Client_8a3cd92f-6214-4f47-b09e-637eb13dca5b968838129
+Entering Client_8a3cd92f-6214-4f47-b09e-637eb13dca5b968838129 into lottery.
+Sending getTime msg to Obelix93804255.
+Sending getTime msg to Obelix1817786036.
+Sending getTime msg to Orgetorix45975067.
+Sending setClockOffset msg to Obelix93804255. Clock offset: 1
+Sending setClockOffset msg to Obelix1817786036. Clock offset: 0
+Sending setClockOffset msg to Orgetorix45975067. Clock offset: 0
+Entered into lottery = Client_e5f856fa-b7f3-48af-bc37-ac04932eaa3f286480230
+Entering Client_e5f856fa-b7f3-48af-bc37-ac04932eaa3f286480230 into lottery.
+Entered into lottery = Client_e5f856fa-b7f3-48af-bc37-ac04932eaa3f286480230
+Entering Client_e5f856fa-b7f3-48af-bc37-ac04932eaa3f286480230 into lottery.
+Entered into lottery = Client_8b8d53f2-7df7-43c5-a071-a936b78c74d6459259812
+Entering Client_8b8d53f2-7df7-43c5-a071-a936b78c74d6459259812 into lottery.
+Sending getTime msg to Obelix93804255.
+Sending getTime msg to Obelix1817786036.
+Sending getTime msg to Orgetorix45975067.
+Sending setClockOffset msg to Obelix93804255. Clock offset: 5
+Sending setClockOffset msg to Obelix1817786036. Clock offset: 1
+Sending setClockOffset msg to Orgetorix45975067. Clock offset: -2
+Entered into lottery = Client_8a3cd92f-6214-4f47-b09e-637eb13dca5b968838129
+Entering Client_8a3cd92f-6214-4f47-b09e-637eb13dca5b968838129 into lottery.
+Entered into lottery = Client_392d20d0-11e1-46b1-9778-644f464eb5d3845643532
+Entering Client_392d20d0-11e1-46b1-9778-644f464eb5d3845643532 into lottery.
+Entered into lottery = Client_8b8d53f2-7df7-43c5-a071-a936b78c74d6459259812
+Entering Client_8b8d53f2-7df7-43c5-a071-a936b78c74d6459259812 into lottery.
+Sending getTime msg to Obelix93804255.
+Sending getTime msg to Obelix1817786036.
+Sending getTime msg to Orgetorix45975067.
+Sending setClockOffset msg to Obelix93804255. Clock offset: -1
+Sending setClockOffset msg to Obelix1817786036. Clock offset: 0
+Sending setClockOffset msg to Orgetorix45975067. Clock offset: 2
+Entered into lottery = Client_392d20d0-11e1-46b1-9778-644f464eb5d3845643532
+Entering Client_392d20d0-11e1-46b1-9778-644f464eb5d3845643532 into lottery.
+Entered into lottery = Client_a2689892-71e8-40a6-93d3-e5c5c4c63845540108002
+Entering Client_a2689892-71e8-40a6-93d3-e5c5c4c63845540108002 into lottery.
+Sending getTime msg to Obelix93804255.
+Sending getTime msg to Obelix1817786036.
+Sending getTime msg to Orgetorix45975067.
+Sending setClockOffset msg to Obelix93804255. Clock offset: 4
+Sending setClockOffset msg to Obelix1817786036. Clock offset: 1
+Sending setClockOffset msg to Orgetorix45975067. Clock offset: -3
+Entered into lottery = Client_8b8d53f2-7df7-43c5-a071-a936b78c74d6459259812
+Entering Client_8b8d53f2-7df7-43c5-a071-a936b78c74d6459259812 into lottery.
+
