@@ -24,7 +24,7 @@ import client.Tablet;
  */
 public class TabletSimulator {
 
-	private static int DEFAULT_TABLET_LIMIT = 5;
+	private static int DEFAULT_TABLET_LIMIT = 10;
 	private static int PROCESS_ORDERING_TABLET_LIMIT = 5;
 	private static int JAVA_RMI_PORT;
 	private static int DEFAULT_JAVA_RMI_PORT = 1099;
